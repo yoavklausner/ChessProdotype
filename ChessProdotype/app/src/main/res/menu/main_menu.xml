@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_login"
+        android:title="login"
+        android:orderInCategory="1"/>
+
+    <item
+        android:id="@+id/action_add_friend"
+        android:title="add friend"
+        android:orderInCategory="2"/>
+
+    <item
+        android:id="@+id/action_logout"
+        android:title="logout"
+        android:orderInCategory="3"/>
+
+    <item
+        android:id="@+id/action_sign_up"
+        android:title="sign up"
+        android:orderInCategory="4"/>
+
+</menu>

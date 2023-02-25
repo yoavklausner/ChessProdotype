@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:id="@+id/main">
+
+<LinearLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_alignParentTop="true"
+    android:layout_centerInParent="true"
+    >
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        >
+    <ImageView
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@drawable/default_user_image"
+        android:id="@+id/ivUserMainImage"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/tvUserUpdateAlert"
+            android:text="new notification!"
+            android:textColor="#D50606"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/ivUserMainImage"
+            android:textSize="10dp"
+            android:visibility="invisible"/>
+    </RelativeLayout>
+    <TextView
+        android:layout_marginLeft="30dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="hello, \n to unlock online features please login"
+        android:textSize="15dp"
+        android:id="@+id/tvHelloMsg"
+        />
+</LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_centerInParent="true">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="face to face game"
+            android:id="@+id/btnStartPhysicalGame"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="find match"
+            android:id="@+id/btnFindMatch"/>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="start private"
+            android:id="@+id/btnStartPrivate"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvGameInvitesAlert"
+        android:text="new game invite!"
+        android:textColor="#D50606"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/btnStartPrivate"
+        android:textSize="12dp"
+        android:visibility="invisible"/>
+</RelativeLayout>
+    </LinearLayout>
+
+
+</RelativeLayout>
