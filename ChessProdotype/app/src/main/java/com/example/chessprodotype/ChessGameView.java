@@ -19,4 +19,5 @@ public interface ChessGameView {
     void switchTurnDisplay();
     void doMove();
     void createEndGameDialog(String winner);
+    void showPawnPromotionDialog();
 }

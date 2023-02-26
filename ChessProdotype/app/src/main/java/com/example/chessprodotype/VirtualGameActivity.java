@@ -432,6 +432,11 @@ public class VirtualGameActivity extends AppCompatActivity implements View.OnCli
         d.show();
     }
 
+    @Override
+    public void showPawnPromotionDialog() {
+
+    }
+
 
     @Override
     public void onClick(View view) {

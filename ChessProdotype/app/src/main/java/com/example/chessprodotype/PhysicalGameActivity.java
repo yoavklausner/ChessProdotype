@@ -12,7 +12,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import pieces.Bishop;
+import pieces.Knight;
 import pieces.Piece;
+import pieces.Queen;
+import pieces.Rook;
 
 public class PhysicalGameActivity extends AppCompatActivity implements View.OnClickListener, ChessGameView {
 
@@ -29,6 +33,7 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
     Dialog d;
     ChessTimer whiteTimer, blackTimer;
     ChessBoard board;
+    Button btnKnight, btnBishop, btnRook, btnQueen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +74,8 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onClick(View view) {
+        Piece.Color color = Piece.Color.WHITE;
+        if (game.getTurn() == Piece.Color.WHITE) color = Piece.Color.BLACK;
         Button btn;
         if (view instanceof Button) {
             btn = (Button) view;
@@ -78,7 +85,12 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
             } else if (btn == btnGoToMenu) {
                 d.dismiss();
                 finish();
-            } else boardButtonsAction(btn);
+            }
+            else if (btn == btnKnight)game.setPawnPromotionPiece(new Knight(color));
+            else if (btn == btnBishop)game.setPawnPromotionPiece(new Bishop(color));
+            else if (btn == btnRook)game.setPawnPromotionPiece(new Rook(color));
+            else if (btn == btnQueen)game.setPawnPromotionPiece(new Queen(color));
+            else boardButtonsAction(btn);
         }
     }
 
@@ -153,7 +165,7 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
                 switchTurnDisplay();
                 tvWhiteLastMoveDisplay.setText("last move: " + move);
                 tvBlackLastMoveDisplay.setText("last move: " + move);
-
+                if (game.getWaitingForPawnPromotionCoordinate() != null) showPawnPromotionDialog();
             } else Toast.makeText(this, "invalid move: " + move, Toast.LENGTH_SHORT).show();
         }
         board.drawBoard();
@@ -172,5 +184,32 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
         btnRestartMatch.setOnClickListener(this);
         btnGoToMenu.setOnClickListener(this);
         d.show();
+    }
+
+    @Override
+    public void showPawnPromotionDialog() {
+        char knightSign = Knight.WHITE_SIGN, bishopSign = Bishop.WHITE_SIGN, rookSign = Rook.WHITE_SIGN, queenSign = Queen.WHITE_SIGN;
+        if (game.getTurn() == Piece.Color.WHITE) {
+            knightSign = Knight.BLACK_SIGN;
+            bishopSign = Bishop.BLACK_SIGN;
+            rookSign = Rook.BLACK_SIGN;
+            queenSign = Queen.BLACK_SIGN;
+        }
+        Dialog d = new Dialog(this);
+        d.setContentView(R.layout.pawn_promotion_dialog);
+        d.setTitle("pawn promotion");
+        d.setCancelable(false);
+        btnKnight = d.findViewById(R.id.btnKnight);
+        btnBishop = d.findViewById(R.id.btnBishop);
+        btnRook = d.findViewById(R.id.btnRook);
+        btnQueen = d.findViewById(R.id.btnQueen);
+        btnKnight.setText(Character.toString(knightSign));
+        btnBishop.setText(Character.toString(bishopSign));
+        btnRook.setText(Character.toString(rookSign));
+        btnQueen.setText(Character.toString(queenSign));
+        btnKnight.setOnClickListener(this);
+        btnBishop.setOnClickListener(this);
+        btnRook.setOnClickListener(this);
+        btnQueen.setOnClickListener(this);
     }
 }

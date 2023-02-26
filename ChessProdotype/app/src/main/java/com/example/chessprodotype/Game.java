@@ -24,6 +24,7 @@ public class Game {
     private Piece.Color turn;
     private Coordinate enPassantCoordinate;
     private String lastMove;
+    private Coordinate waitingForPawnPromotionCoordinate;
 
     // for efficiency only
     private int whiteScore;
@@ -43,6 +44,7 @@ public class Game {
         lastMove = "";
         checkmate = false;
         pat = false;
+        waitingForPawnPromotionCoordinate = null;
     }
 
     public Game(Game game){
@@ -55,6 +57,7 @@ public class Game {
         this.lastMove = game.lastMove;
         this.whiteScore = game.whiteScore;
         this.blackScore = game.blackScore;
+        this.waitingForPawnPromotionCoordinate = game.waitingForPawnPromotionCoordinate;
     }
 
 
@@ -68,6 +71,7 @@ public class Game {
         lastMove = "";
         checkmate = false;
         pat = false;
+        waitingForPawnPromotionCoordinate = null;
         initPieces();
     }
 
@@ -146,6 +150,18 @@ public class Game {
     }
 
 
+    protected Piece getPieceInCoordinate(Coordinate coordinate){ // using the assumption which in each coordinate there can be only one piece
+        if (coordinate != null) {
+            String coordinateStr = coordinate.toString();
+            if (this.whitePieces.containsKey(coordinateStr))
+                return this.whitePieces.get(coordinateStr);
+            if (this.blackPieces.containsKey(coordinateStr))
+                return this.blackPieces.get(coordinateStr);
+        }
+        return null;
+    }
+
+
     private String[] getPiecesCoordinates(Piece.Color color){
         return getPiecesCoordinates(getPieces(color));
     }
@@ -211,6 +227,14 @@ public class Game {
         return pat;
     }
 
+    public void setWaitingForPawnPromotionCoordinate(Coordinate waitingForPawnPromotionCoordinate) {
+        this.waitingForPawnPromotionCoordinate = waitingForPawnPromotionCoordinate;
+    }
+
+    public Coordinate getWaitingForPawnPromotionCoordinate() {
+        return waitingForPawnPromotionCoordinate;
+    }
+
     public Piece.Color getTurn() {
         return turn;
     }
@@ -250,13 +274,6 @@ public class Game {
     }
 
 
-    private void removeOpponentPiece(Coordinate coordinate){
-        HashMap<String, Piece> opponent;
-        if (turn == Piece.Color.WHITE) opponent = this.blackPieces;
-        else opponent = this.whitePieces;
-        opponent.remove(coordinate.toString());
-    }
-
 
 
     private void enPassant(){
@@ -267,28 +284,18 @@ public class Game {
     }
 
 
-    private Coordinate getKingCoordinate(){
-        HashMap<String, Piece> turnPieces = getPieces(turn);
-        String[] coordinates = getPiecesCoordinates(turnPieces);
-        for (int i = 0; i < coordinates.length; i++){
-            if (turnPieces.get(coordinates[i]) instanceof King) return new Coordinate(coordinates[i]);
-        }
-        return null; //this case can never happen
-    }
-
-    private boolean isProtectingKing(Coordinate start, Coordinate end, boolean eating){
-        Game gameSimulate = new Game(this);
-        if (eating) gameSimulate.eat(start, end);
-        gameSimulate.movePiece(start, end);
-        gameSimulate.turn = turn;
-        return !gameSimulate.isCheck();
-    }
-
     private void movePiece(Coordinate start, Coordinate end){
         HashMap<String, Piece> turnPieces = getPieces(turn);
         Piece piece = turnPieces.get(start.toString());
         turnPieces.remove(start.toString());
         turnPieces.put(end.toString(), piece);
+    }
+
+    private void removeOpponentPiece(Coordinate coordinate){
+        HashMap<String, Piece> opponent;
+        if (turn == Piece.Color.WHITE) opponent = this.blackPieces;
+        else opponent = this.whitePieces;
+        opponent.remove(coordinate.toString());
     }
 
     private void eat(Coordinate start, Coordinate end){
@@ -300,16 +307,6 @@ public class Game {
         }
     }
 
-    protected Piece getPieceInCoordinate(Coordinate coordinate){ // using the assumption which in each coordinate there can be only one piece
-        if (coordinate != null) {
-            String coordinateStr = coordinate.toString();
-            if (this.whitePieces.containsKey(coordinateStr))
-                return this.whitePieces.get(coordinateStr);
-            if (this.blackPieces.containsKey(coordinateStr))
-                return this.blackPieces.get(coordinateStr);
-        }
-        return null;
-    }
 
 
     private boolean isCheck(){
@@ -386,6 +383,12 @@ public class Game {
         if (eating) eat(start, end);
         lastMove = piece.getPieceChar() + " " + start + " ->" + end;;
         movePiece(start, end);
+        if (piece instanceof Pawn){
+            if (turn == Piece.Color.WHITE){
+                if (end.getRow() == 8) waitingForPawnPromotionCoordinate = end;}
+            else{
+                if (end.getRow() == 1) waitingForPawnPromotionCoordinate = end;}
+        }
         if (turn == Piece.Color.WHITE) turn = Piece.Color.BLACK;
         else turn = Piece.Color.WHITE;
         if (piece instanceof FirstMoveSpecialPiece)
@@ -393,29 +396,18 @@ public class Game {
         setGameState();
     }
 
-    private boolean isKingProtectable(Coordinate kingCr, Coordinate threateningCr){
-        ArrayList<Coordinate> threatRoute = getRoute(threateningCr, kingCr);
-        HashMap<String, Piece> turnPieces = getPieces(turn);
-        String[] coordinates = getPiecesCoordinates(turn);
-        for (int i = 0; i < coordinates.length; i++){
-            if (!(turnPieces.get(coordinates[i]) instanceof King)){
-                for (int j = 0; j < threatRoute.size(); j++)
-                    if (canMove(new Coordinate(coordinates[i]), threatRoute.get(j)))
-                        return true;
-            }
+    public void setPawnPromotionPiece(Piece piece){
+        HashMap<String, Piece> pieces = whitePieces;
+        if (turn == Piece.Color.WHITE) pieces = blackPieces;
+        if (waitingForPawnPromotionCoordinate != null)
+        {
+            String coorStr = waitingForPawnPromotionCoordinate.toString();
+            pieces.remove(coorStr);
+            pieces.put(coorStr, piece);
         }
-        return false;
+        waitingForPawnPromotionCoordinate = null;
     }
 
-    private boolean isKingMovable(Game simulation,Coordinate kingCr, ArrayList<Coordinate> kingSurround) {
-        Coordinate current;
-        for (int s = 0; s < kingSurround.size(); s++){
-            current = kingSurround.get(s);
-            if (simulation.checkEndAndMove(kingCr, current))
-                return true;
-        }
-        return false;
-    }
 
     private boolean checkDraw(){
         Game simulateGame = new Game(this);
@@ -452,6 +444,47 @@ public class Game {
         pat = threateningCr == null && checkDraw();
     }
 
+
+    private Coordinate getKingCoordinate(){
+        HashMap<String, Piece> turnPieces = getPieces(turn);
+        String[] coordinates = getPiecesCoordinates(turnPieces);
+        for (int i = 0; i < coordinates.length; i++){
+            if (turnPieces.get(coordinates[i]) instanceof King) return new Coordinate(coordinates[i]);
+        }
+        return null; //this case can never happen
+    }
+
+    private boolean isProtectingKing(Coordinate start, Coordinate end, boolean eating){
+        Game gameSimulate = new Game(this);
+        if (eating) gameSimulate.eat(start, end);
+        gameSimulate.movePiece(start, end);
+        gameSimulate.turn = turn;
+        return !gameSimulate.isCheck();
+    }
+
+    private boolean isKingProtectable(Coordinate kingCr, Coordinate threateningCr){
+        ArrayList<Coordinate> threatRoute = getRoute(threateningCr, kingCr);
+        HashMap<String, Piece> turnPieces = getPieces(turn);
+        String[] coordinates = getPiecesCoordinates(turn);
+        for (int i = 0; i < coordinates.length; i++){
+            if (!(turnPieces.get(coordinates[i]) instanceof King)){
+                for (int j = 0; j < threatRoute.size(); j++)
+                    if (canMove(new Coordinate(coordinates[i]), threatRoute.get(j)))
+                        return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isKingMovable(Game simulation,Coordinate kingCr, ArrayList<Coordinate> kingSurround) {
+        Coordinate current;
+        for (int s = 0; s < kingSurround.size(); s++){
+            current = kingSurround.get(s);
+            if (simulation.checkEndAndMove(kingCr, current))
+                return true;
+        }
+        return false;
+    }
 
 
     private ArrayList<Coordinate> getKingSurround(Coordinate kingCr){
