@@ -6,19 +6,24 @@
         android:title="login"
         android:orderInCategory="1"/>
 
+    <item android:id="@+id/user_profile"
+        android:title="my profile"
+        android:orderInCategory="2"/>
+
     <item
         android:id="@+id/action_add_friend"
         android:title="add friend"
-        android:orderInCategory="2"/>
+        android:orderInCategory="3"/>
 
     <item
         android:id="@+id/action_logout"
         android:title="logout"
-        android:orderInCategory="3"/>
+        android:orderInCategory="4"/>
 
     <item
         android:id="@+id/action_sign_up"
         android:title="sign up"
-        android:orderInCategory="4"/>
+        android:orderInCategory="5"/>
+
 
 </menu>

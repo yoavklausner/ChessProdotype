@@ -27,17 +27,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import pieces.Bishop;
+import pieces.Knight;
 import pieces.Piece;
+import pieces.Queen;
+import pieces.Rook;
 
-public class VirtualGameActivity extends AppCompatActivity implements View.OnClickListener, ChessGameView, ValueEventListener {
+public class VirtualGameActivity extends GameActivity implements View.OnClickListener, ChessGameView, ValueEventListener {
 
 
     Piece.Color playerColor;
     String gameCode, opponentUserName = null;
-    DisplayMetrics displayMetrics;
-    LinearLayout llGameLayout;
-    Game game;
-    Coordinate startCoordinate, endCoordinate;
     String target = null;
     public static final String WAITING = "WAITING";
     public static final String JOINING = "JOINING";
@@ -50,12 +50,16 @@ public class VirtualGameActivity extends AppCompatActivity implements View.OnCli
     ChessBoard board;
     TextView tvLastMoveDisplay;
     TextView tvTurnDisplay;
-    TextView tvEndGameMessage;
     TextView tvOpponentUserName, tvOpponentRank;
     //TextView tvPlayerTimer, tvOpponentTimer;
     Dialog d;
     Button btnRestartMatch;
     Button btnGoToMenu;
+
+    private Button btnKnight;
+    private Button btnBishop;
+    private Button btnRook;
+    private Button btnQueen;
     Intent serviceIntent;
     public int gameSessionStage;
     int notificationID = 1;
@@ -386,12 +390,12 @@ public class VirtualGameActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void doMove() {
-        String move = null;
         move = game.getPieceInCoordinate(startCoordinate).getPieceChar() + " " + startCoordinate + " -> " + endCoordinate;
         if (!endCoordinate.equals(startCoordinate)) {
             if (game.checkEndAndMove(startCoordinate, endCoordinate)) {
                 move = game.getLastMove();
-                uploadGameAndFinishTurn(move);
+                if (game.getWaitingForPawnPromotionCoordinate() != null) showPawnPromotionDialog();
+                else uploadGameAndFinishTurn(move);
             }
             else Toast.makeText(this, "invalid move: " + move, Toast.LENGTH_SHORT).show();
         }
@@ -400,6 +404,12 @@ public class VirtualGameActivity extends AppCompatActivity implements View.OnCli
             board.drawGamePieces(game.getBoard(), playerColor);
             startCoordinate = null;
         }
+    }
+
+    @Override
+    public void continueTurn() {
+        super.continueTurn();
+        uploadGameAndFinishTurn(move);
     }
 
     private void uploadGameAndFinishTurn(String move){
@@ -432,20 +442,35 @@ public class VirtualGameActivity extends AppCompatActivity implements View.OnCli
         d.show();
     }
 
-    @Override
-    public void showPawnPromotionDialog() {
 
-    }
 
 
     @Override
     public void onClick(View view) {
         Button btn;
+        Piece.Color color = Piece.Color.WHITE;
+        if (game.getTurn() == Piece.Color.WHITE) color = Piece.Color.BLACK;
         if (view instanceof Button) {
             btn = (Button) view;
             if (btn == btnGoToMenu){
                 setResult(RESULT_OK);
                 finish();
+            }
+            else if (btn == btnKnight){
+                game.setPawnPromotionPiece(new Knight(color));
+                continueTurn();
+            }
+            else if (btn == btnBishop){
+                game.setPawnPromotionPiece(new Bishop(color));
+                continueTurn();
+            }
+            else if (btn == btnRook){
+                game.setPawnPromotionPiece(new Rook(color));
+                continueTurn();
+            }
+            else if (btn == btnQueen){
+                game.setPawnPromotionPiece(new Queen(color));
+                continueTurn();
             }
             else boardButtonsAction(btn);
         }
@@ -514,6 +539,7 @@ public class VirtualGameActivity extends AppCompatActivity implements View.OnCli
         stopService(serviceIntent);
         AppData.uninviteToGame(opponentUserName);
         isGameRunning = false;
+        AppData.uninviteToGame(opponentUserName);
         finish();
     }
 }

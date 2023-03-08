@@ -18,22 +18,15 @@ import pieces.Piece;
 import pieces.Queen;
 import pieces.Rook;
 
-public class PhysicalGameActivity extends AppCompatActivity implements View.OnClickListener, ChessGameView {
+public class PhysicalGameActivity extends GameActivity implements View.OnClickListener {
 
 
-    DisplayMetrics displayMetrics;
-    LinearLayout llGameLayout;
-    Game game;
-    Coordinate startCoordinate, endCoordinate;
     TextView tvWhiteLastMoveDisplay, tvBlackLastMoveDisplay;
     TextView tvWhiteTurnDisplay, tvBlackTurnDisplay;
     TextView tvWhiteTimer, tvBlackTimer;
-    TextView tvEndGameMsg;
     Button btnGoToMenu, btnRestartMatch;
     Dialog d;
     ChessTimer whiteTimer, blackTimer;
-    ChessBoard board;
-    Button btnKnight, btnBishop, btnRook, btnQueen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,13 +79,26 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
                 d.dismiss();
                 finish();
             }
-            else if (btn == btnKnight)game.setPawnPromotionPiece(new Knight(color));
-            else if (btn == btnBishop)game.setPawnPromotionPiece(new Bishop(color));
-            else if (btn == btnRook)game.setPawnPromotionPiece(new Rook(color));
-            else if (btn == btnQueen)game.setPawnPromotionPiece(new Queen(color));
+            else if (btn == btnKnight){
+                game.setPawnPromotionPiece(new Knight(color));
+                continueTurn();
+            }
+            else if (btn == btnBishop){
+                game.setPawnPromotionPiece(new Bishop(color));
+                continueTurn();
+            }
+            else if (btn == btnRook){
+                game.setPawnPromotionPiece(new Rook(color));
+                continueTurn();
+            }
+            else if (btn == btnQueen){
+                game.setPawnPromotionPiece(new Queen(color));
+                continueTurn();
+            }
             else boardButtonsAction(btn);
         }
     }
+
 
     public void checkStartPressedSquare(Coordinate coordinate) {
         if (game.isStartCoordinateValid(coordinate)) {
@@ -177,10 +183,10 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
         d = new Dialog(this);
         d.setContentView(R.layout.chackmate_dialog);
         d.setTitle("end game");
-        tvEndGameMsg = d.findViewById(R.id.tvWinner);
+        tvEndGameMessage = d.findViewById(R.id.tvWinner);
         btnRestartMatch = d.findViewById(R.id.btnRestartMatch);
         btnGoToMenu = d.findViewById(R.id.btnGoToMenu);
-        tvEndGameMsg.setText(endGameMsg);
+        tvEndGameMessage.setText(endGameMsg);
         btnRestartMatch.setOnClickListener(this);
         btnGoToMenu.setOnClickListener(this);
         d.show();
@@ -195,7 +201,7 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
             rookSign = Rook.BLACK_SIGN;
             queenSign = Queen.BLACK_SIGN;
         }
-        Dialog d = new Dialog(this);
+        d = new Dialog(this);
         d.setContentView(R.layout.pawn_promotion_dialog);
         d.setTitle("pawn promotion");
         d.setCancelable(false);
@@ -211,5 +217,8 @@ public class PhysicalGameActivity extends AppCompatActivity implements View.OnCl
         btnBishop.setOnClickListener(this);
         btnRook.setOnClickListener(this);
         btnQueen.setOnClickListener(this);
+        d.show();
     }
+
+
 }

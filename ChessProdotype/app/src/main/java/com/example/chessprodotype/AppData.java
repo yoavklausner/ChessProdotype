@@ -173,6 +173,37 @@ public class AppData extends Application {
         return pieces;
     }
 
+
+    private static Piece getPieceByType(DataSnapshot snapshot){
+        Piece piece;
+        Piece.Color color = snapshot.child("color").getValue(Piece.Color.class);
+        String pieceChar = snapshot.child("pieceChar").getValue(String.class);
+        char character = pieceChar.charAt(0);
+        boolean moved = false;
+        if (snapshot.hasChild("moved"))
+            moved = snapshot.child("moved").getValue(boolean.class);
+        if (character == Rook.WHITE_SIGN || character == Rook.BLACK_SIGN) {
+            piece = new Rook(color);
+            ((Rook)piece).setMoved(moved);
+        }
+        else if (character == Pawn.WHITE_SIGN || character == Pawn.BLACK_SIGN) {
+            piece = new Pawn(color);
+            ((Pawn)piece).setMoved(moved);
+        }
+        else if (character == King.WHITE_SIGN || character == King.BLACK_SIGN) {
+            piece = new King(color);
+            ((King)piece).setMoved(moved);
+        }
+        else if (character == Queen.WHITE_SIGN || character == Queen.BLACK_SIGN)
+            piece = new Queen(color);
+        else if (character == Knight.WHITE_SIGN || character == Knight.BLACK_SIGN)
+            piece = new Knight(color);
+        else piece = new Bishop(color);
+        return piece;
+    }
+
+
+
     public static boolean uploadUserState(Context context){
         AtomicBoolean result = new AtomicBoolean(false);
         fbRef.child("users").setValue(users, ((error, ref) -> {
@@ -193,24 +224,20 @@ public class AppData extends Application {
                 String token = snapshot.getValue(String.class);
                 if (token != null){
                     targetToken = token;
-                    fbRef.child("users").child(opponent).child("game invites").child(user.getUserName()).setValue(myColor, ((error, ref) -> {
-                        if (error == null){
-                            FirebaseMessaging fm = FirebaseMessaging.getInstance();
-                            Map<String, String> data = new HashMap<>();
-                            data.put(TYPE, GAME_INVITE_NTF);
-                            data.put(U_NAME, user.getUserName());
-                            data.put("COLOR", myColor.toString());
-
-                            RemoteMessage message = new RemoteMessage.Builder(targetToken)
-                                    .setData(data)
-                                    .build();
-
-                            fm.send(message);
+                    fbRef.child("users").child(opponent).child("game invites").child(user.getUserName()).child("notification sent").setValue(false, (error, ref) ->{
+                        if (error == null) {
+                            fbRef.child("users").child(opponent).child("game invites").child(user.getUserName()).child("color").setValue(myColor, (error1, ref1) -> {
+                                if (error1 == null) {
 // Response is a message ID string.
-                            Toast.makeText(context, "game invite has been sent to " + opponent, Toast.LENGTH_LONG).show();
-                        }else
-                            Toast.makeText(context, "game invite sending has been failed!", Toast.LENGTH_SHORT).show();
-                    }));
+                                    Toast.makeText(context, "game invite has been sent to " + opponent, Toast.LENGTH_LONG).show();
+                                } else {
+                                    fbRef.child("users").child(opponent).child("game invites").child(user.getUserName()).removeValue();
+                                    Toast.makeText(context, "game invite sending has been failed!", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }else Toast.makeText(context, "game invite sending has been failed!", Toast.LENGTH_SHORT).show();
+                    });
+
                 }
                 else Toast.makeText(context, "game invite has been failed!", Toast.LENGTH_SHORT).show();
             }
@@ -231,18 +258,8 @@ public class AppData extends Application {
                 String token = snapshot.getValue(String.class);
                 if (token != null){
                     targetToken = token;
-                    fbRef.child("users").child(userName).child("friend requests").child(user.getUserName()).setValue(user.getUserName(), ((error, ref) -> {
+                    fbRef.child("users").child(userName).child("friend requests").child(user.getUserName()).setValue(false, ((error, ref) -> {
                         if (error == null){
-                            FirebaseMessaging fm = FirebaseMessaging.getInstance();
-                            Map<String, String> data = new HashMap<>();
-                            data.put(TYPE, FRIEND_REQ_NTF);
-                            data.put(U_NAME, user.getUserName());
-
-                            RemoteMessage message = new RemoteMessage.Builder(targetToken)
-                                    .setData(data)
-                                    .build();
-
-                            fm.send(message);
 // Response is a message ID string.
                             System.out.println("Successfully sent message.");
                             Toast.makeText(context, "friend request has been sent to " + userName, Toast.LENGTH_LONG).show();
@@ -282,33 +299,7 @@ public class AppData extends Application {
     }
 
 
-    private static Piece getPieceByType(DataSnapshot snapshot){
-        Piece piece;
-        Piece.Color color = snapshot.child("color").getValue(Piece.Color.class);
-        String pieceChar = snapshot.child("pieceChar").getValue(String.class);
-        char character = pieceChar.charAt(0);
-        boolean moved = false;
-        if (snapshot.hasChild("moved"))
-            moved = snapshot.child("moved").getValue(boolean.class);
-        if (character == Rook.WHITE_SIGN || character == Rook.BLACK_SIGN) {
-            piece = new Rook(color);
-            ((Rook)piece).setMoved(moved);
-        }
-        else if (character == Pawn.WHITE_SIGN || character == Pawn.BLACK_SIGN) {
-            piece = new Pawn(color);
-            ((Pawn)piece).setMoved(moved);
-        }
-        else if (character == King.WHITE_SIGN || character == King.BLACK_SIGN) {
-            piece = new King(color);
-            ((King)piece).setMoved(moved);
-        }
-        else if (character == Queen.WHITE_SIGN || character == Queen.BLACK_SIGN)
-            piece = new Queen(color);
-        else if (character == Knight.WHITE_SIGN || character == Knight.BLACK_SIGN)
-            piece = new Knight(color);
-        else piece = new Bishop(color);
-        return piece;
-    }
+
 
 
     public static boolean isUserExit(String userName){
@@ -317,59 +308,59 @@ public class AppData extends Application {
 
 
 
-    public static void setUserNotificationListen(Context context){
-        MainActivity mainActivity =  (MainActivity) context;
-        String userName = user.getUserName();
-        AppData.fbRef.child("users").child(userName).child("friend requests").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot != null) {
-                    GenericTypeIndicator<HashMap<String, String>> t = new GenericTypeIndicator<HashMap<String, String>>() {};
-                    HashMap<String, String> dataRequests = snapshot.getValue(t);
-                    friendRequests.clear();
-                    if (dataRequests != null) {
-                        friendRequests.putAll(dataRequests);
-                        tvAlert = mainActivity.tvUsersNotificationAlert;
-                        if (tvAlert != null) tvAlert.setVisibility(View.VISIBLE);
-                    }
-                    else {
-                        if (tvAlert != null) tvAlert.setVisibility(View.INVISIBLE);
-                        if (mainActivity.btnFriendRequests != null)
-                        {
-                            mainActivity.btnFriendRequests.setEnabled(false);
-                            mainActivity.btnFriendRequests.setVisibility(View.INVISIBLE);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-        AppData.fbRef.child("users").child(userName).child("game invites").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot != null) {
-                    GenericTypeIndicator<HashMap<String, Piece.Color>> t = new GenericTypeIndicator<HashMap<String, Piece.Color>>() {};
-                    HashMap<String, Piece.Color> dataRequests = snapshot.getValue(t);
-                    gameInvites.clear();
-                    if (dataRequests != null) {
-                        gameInvites.putAll(dataRequests);
-                        tvAlert = mainActivity.tvGameInvitesAlert;
-                        if (tvAlert != null) tvAlert.setVisibility(View.VISIBLE);
-                    }
-                    else if (tvAlert != null) tvAlert.setVisibility(View.INVISIBLE);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-    }
+    //public static void setUserNotificationListen(Context context){
+    //    MainActivity mainActivity =  (MainActivity) context;
+    //    String userName = user.getUserName();
+    //    AppData.fbRef.child("users").child(userName).child("friend requests").addValueEventListener(new ValueEventListener() {
+    //        @Override
+    //        public void onDataChange(@NonNull DataSnapshot snapshot) {
+    //            if (snapshot != null) {
+    //                GenericTypeIndicator<HashMap<String, String>> t = new GenericTypeIndicator<HashMap<String, String>>() {};
+    //                HashMap<String, String> dataRequests = snapshot.getValue(t);
+    //                friendRequests.clear();
+    //                if (dataRequests != null) {
+    //                    friendRequests.putAll(dataRequests);
+    //                    tvAlert = mainActivity.tvUsersNotificationAlert;
+    //                    if (tvAlert != null) tvAlert.setVisibility(View.VISIBLE);
+    //                }
+    //                else {
+    //                    if (tvAlert != null) tvAlert.setVisibility(View.INVISIBLE);
+    //                    if (mainActivity.btnFriendRequests != null)
+    //                    {
+    //                        mainActivity.btnFriendRequests.setEnabled(false);
+    //                        mainActivity.btnFriendRequests.setVisibility(View.INVISIBLE);
+    //                    }
+    //                }
+    //            }
+    //        }
+//
+    //        @Override
+    //        public void onCancelled(@NonNull DatabaseError error) {
+//
+    //        }
+    //    });
+    //    AppData.fbRef.child("users").child(userName).child("game invites").addValueEventListener(new ValueEventListener() {
+    //        @Override
+    //        public void onDataChange(@NonNull DataSnapshot snapshot) {
+    //            if (snapshot != null) {
+    //                GenericTypeIndicator<HashMap<String, Piece.Color>> t = new GenericTypeIndicator<HashMap<String, Piece.Color>>() {};
+    //                HashMap<String, Piece.Color> dataRequests = snapshot.getValue(t);
+    //                gameInvites.clear();
+    //                if (dataRequests != null) {
+    //                    gameInvites.putAll(dataRequests);
+    //                    tvAlert = mainActivity.tvGameInvitesAlert;
+    //                    if (tvAlert != null) tvAlert.setVisibility(View.VISIBLE);
+    //                }
+    //                else if (tvAlert != null) tvAlert.setVisibility(View.INVISIBLE);
+    //            }
+    //        }
+//
+    //        @Override
+    //        public void onCancelled(@NonNull DatabaseError error) {
+//
+    //        }
+    //    });
+    //}
 
 
     public static void removeGameInvite(String userName){

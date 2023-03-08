@@ -33,6 +33,7 @@ import pieces.Piece;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     Intent intent;
+    Intent messagesIntent;
     Button btnStartPhysicalGame;
     Button btnFindMatch;
     Button btnStartPrivate;
@@ -47,8 +48,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Dialog userDialog;
     ImageView ivProfileImage;
     TextView tvFirstName, tvLastName, tvUserRank;
-    Button btnAddFriend, btnFriends, btnFriendRequests;
-    public TextView tvUsersNotificationAlert, tvGameInvitesAlert;
+    Button btnAddFriend, btnFriends;
+    public static Button btnFriendRequests;
+    public static TextView tvUsersNotificationAlert, tvGameInvitesAlert;
 
 
 
@@ -93,7 +95,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         menu.getItem(0).setVisible(!loggedIn);
         menu.getItem(1).setVisible(loggedIn);
         menu.getItem(2).setVisible(loggedIn);
-        menu.getItem(3).setVisible(!loggedIn);
+        menu.getItem(3).setVisible(loggedIn);
+        menu.getItem(4).setVisible(!loggedIn);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -145,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
             enableOnlineFeatures(true);
-            AppData.setUserNotificationListen(this);
+            messagesIntent = new Intent(this, UserMessagesService.class);
+            startService(messagesIntent);
         }
         else logout();
     }
@@ -172,6 +176,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(this, SignUpActivity.class);
             startActivityForResult(intent, SIGN_UP_ACTIVITY_INTENT);
             return true;
+        }
+        else if (id == R.id.user_profile){
+            if (AppData.user != null){
+                createProfileDialog();
+            }
         }
         return true;
     }
@@ -204,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.w("end virtual game: ", uName + " is not the game host", error.toException());
                     }
                 });
+                startService(messagesIntent);
             }
         }
         else {
@@ -216,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     AppData.removeGameFields(gameCode);
                     Toast.makeText(this, "game connection no longer exist", Toast.LENGTH_SHORT).show();
                 }
+                startService(messagesIntent);
             }
         }
     }
@@ -238,9 +249,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(intent);
         }
         if (view == btnFindMatch){
+            stopService(messagesIntent);
             startFindMatch();
         }
         if (view == btnStartPrivate){
+            stopService(messagesIntent);
             startPrivateMatch();
         }
         if (view == btnLoginSubmit){
@@ -268,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 showFriendRequestsDialog();
         }
     }
+
 
 
     private void showFriendRequestsDialog(){

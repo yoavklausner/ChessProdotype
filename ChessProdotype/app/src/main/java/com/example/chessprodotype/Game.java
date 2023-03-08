@@ -436,7 +436,7 @@ public class Game {
         return true;
     }
 
-    private void setGameState(){
+    public void setGameState(){
         Coordinate kingCr = getKingCoordinate();
         Coordinate threateningCr = getThreateningCoordinate(kingCr);
         ArrayList<Coordinate> kingSurround = getKingSurround(kingCr);
