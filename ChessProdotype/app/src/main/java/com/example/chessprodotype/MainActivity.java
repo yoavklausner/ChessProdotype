@@ -23,7 +23,6 @@ import android.widget.Toast;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -33,7 +32,6 @@ import pieces.Piece;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     Intent intent;
-    Intent messagesIntent;
     Button btnStartPhysicalGame;
     Button btnFindMatch;
     Button btnStartPrivate;
@@ -111,6 +109,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
+    //logging out user from shared preferences, reset user image, blocks online features
+    //stops online messages listener service
     private void logout(){
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(AppData.U_NAME, null);
@@ -119,8 +119,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AppData.user = null;
         ivUserMainImage.setImageDrawable(this.getResources().getDrawable(R.drawable.default_user_image));
         tvHelloMsg.setText("hello,\n to unlock online features please login");
+        stopService(new Intent(this, UserMessagesService.class));
+        if (tvUsersNotificationAlert != null) tvUsersNotificationAlert.setVisibility(View.INVISIBLE);
+        if (tvGameInvitesAlert != null) tvGameInvitesAlert.setVisibility(View.INVISIBLE);
     }
 
+    //starting login user into shared preferences
     private void login(String userName){
         SharedPreferences.Editor editor = sp.edit();
         User user = AppData.getUser(userName);
@@ -132,24 +136,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    //continuing login: puts user image, enabling online features, starts online messages listener service
     private void enterUser(User user){
         if (user != null) {
-            final String[] token = {null};
             SharedPreferences.Editor editor = sp.edit();
             editor.putBoolean("user_app_running", true);
             editor.commit();
             tvHelloMsg.setText("hello, " + user.getFirstName());
             user.putMyImageIntoFrame(this, ivUserMainImage);
             AppData.user = user;
-            FirebaseMessaging.getInstance().getToken()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            AppData.setUserFCMToken(task.getResult());
-                        }
-                    });
             enableOnlineFeatures(true);
-            messagesIntent = new Intent(this, UserMessagesService.class);
-            startService(messagesIntent);
+            startService(new Intent(this, UserMessagesService.class));
         }
         else logout();
     }
@@ -213,7 +210,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.w("end virtual game: ", uName + " is not the game host", error.toException());
                     }
                 });
-                startService(messagesIntent);
+                stopService(new Intent(this, OnGameActivityCloseService.class));
+                startService(new Intent(this, UserMessagesService.class));
             }
         }
         else {
@@ -221,16 +219,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 logout();
             }
             else if (requestCode == VIRTUAL_GAME_INTENT){
-                String gameCode = data.getStringExtra("GAME_CODE");
-                if (gameCode != null) {
-                    AppData.removeGameFields(gameCode);
-                    Toast.makeText(this, "game connection no longer exist", Toast.LENGTH_SHORT).show();
-                }
-                startService(messagesIntent);
+                Toast.makeText(this, "game connection no longer exist", Toast.LENGTH_SHORT).show();
+                stopService(new Intent(this, OnGameActivityCloseService.class));
+                startService(new Intent(this, UserMessagesService.class));
             }
         }
     }
 
+    //creating dialog for logging in and showing it
     public void createLoginDialog(){
         d = new Dialog(this);
         d.setContentView(R.layout.login_dialog);
@@ -249,11 +245,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(intent);
         }
         if (view == btnFindMatch){
-            stopService(messagesIntent);
+            stopService(new Intent(this, UserMessagesService.class));
             startFindMatch();
         }
         if (view == btnStartPrivate){
-            stopService(messagesIntent);
+            stopService(new Intent(this, UserMessagesService.class));
             startPrivateMatch();
         }
         if (view == btnLoginSubmit){
@@ -283,7 +279,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
+    //creating a dialog showing all friend requests right now and showing it
+    //with functionality for confirm or deny requests
     private void showFriendRequestsDialog(){
         // setup the alert builder
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -298,13 +295,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 builder1.setMessage("add " + requests[which] + " to your friends?");
                 builder1.setCancelable(false);
                 builder1.setPositiveButton("Yes", (DialogInterface.OnClickListener) (dialog1, r) -> {
-                    // When the user click yes button then app will close
                     dialog1.cancel();
                     AppData.confirmFriendRequest(getApplicationContext(), requests[which]);
                 });
                 builder1.setNegativeButton("No, deny", (DialogInterface.OnClickListener) (dialog1, r) -> {
-                    // If user click no then dialog box is canceled.
-                    AppData.denyFriendRequest(requests[which]);
+                    AppData.removeFriendRequest(requests[which]);
                     dialog1.cancel();
                 });
                 // Create the Alert dialog
@@ -320,13 +315,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+    //setting the parameters which will be sent to virtual game activity
     private void setGameParams(){
         myColor = randomGameCoLor();
         gameCode = AppData.user.getUserName();
         target = VirtualGameActivity.START_PRIVATE;
     }
 
-
+    //starting private match, showing dialog for selecting game to join if there are or to create new session
+    //if there are no game invites creating new session and starting private match
     private void startPrivateMatch(){
         if (!AppData.gameInvites.isEmpty()){
             // setup the alert builder
@@ -360,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
+    //showing dialog with all current user friends user names
     private void showFriendsDialog(){
         // setup the alert builder
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -379,7 +376,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dialog.show();
     }
 
-
+    //creating dialog showing user info and user options
     private void createProfileDialog(){
         userDialog = new Dialog(this);
         userDialog.setContentView(R.layout.user_profile_dialog);
@@ -412,6 +409,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         userDialog.show();
     }
 
+    //returning user-name of the user with the closest rank to me who waiting for game
     private String getClosestOpponentWaiting(){
         String closestOpponent = null, current = null;
         int closestOpponentDif = 100, currentDif = 0;
@@ -428,6 +426,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return closestOpponent;
     }
 
+    //creating intent with virtual game activity params and starting game activity
+    //after sending intent resetting this activity attributes which contain virtual game params
     private void goToVirtualGameActivity(){
         if (myColor != null && gameCode != null && target != null) {
             Intent intent = new Intent(this, VirtualGameActivity.class);
@@ -441,6 +441,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    //starting public match:
+    //  if there is waiting player in the range of 100 rank difference joining his session
+    //  else starting own session
     private void startFindMatch(){
         gameCode = null;
         closestOpponentUname = getClosestOpponentWaiting();
@@ -471,20 +474,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    //generating random color for creating game session
     private Piece.Color randomGameCoLor(){
         Random random = new Random();
         if (random.nextBoolean()) return Piece.Color.WHITE;
         return Piece.Color.BLACK;
     }
 
-
+    //checking login dialog input data and if valid logging in user
     private void submitLoginDialog(){
         String userName = etLoginUserName.getText().toString();
         String password = etLoginPassword.getText().toString();
         if (userName == null) etLoginUserName.setError("field must be filled");
         else if (password == null) etLoginPassword.setError("field muse be filled");
         else{
-            if (!AppData.isUserExit(userName))
+            if (!AppData.isUserExist(userName))
                 Toast.makeText(this, "user not found", Toast.LENGTH_LONG).show();
             else if (!AppData.getUser(userName).getPassword().equals(password))
                 Toast.makeText(this, "password incorrect", Toast.LENGTH_LONG).show();
@@ -496,6 +500,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    //gets boolean value telling if to enable online features or not
+    //enabling or not enabling online features accordingly
     private void enableOnlineFeatures(boolean enable){
 
         btnFindMatch.setEnabled(enable);

@@ -51,6 +51,8 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         btnCancel.setOnClickListener(this);
     }
 
+    //gets context in app and image bitmap
+    //returns uri of wanted image
     public Uri getImageUri(Context inContext, Bitmap inImage) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
@@ -128,6 +130,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 
+    //showing dialog for setting image
     private void createSetImageDialog() {
         d = new Dialog(this);
         d.setContentView(R.layout.set_image_dialog);
@@ -139,6 +142,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         d.show();
     }
 
+    // signing up and returning the new user object via intent
     private void finishAndReturnUser(){
         if (isInputValid()) {
             if (imageUriStr != null) {
@@ -158,6 +162,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 
+    //clearing and resetting the input views on activity
     private void clearFields(){
 
         etFirstName.setText("");
@@ -174,6 +179,8 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         imageUri = null;
     }
 
+    //gets string and specific characters
+    //returning true if the string contain some of the wanted characters
     private boolean isContainFrom(String str, String wantedChars){
         for (int i = 0; i < wantedChars.length(); i++)
             if (str.contains(Character.toString(wantedChars.charAt(i))))
@@ -181,26 +188,29 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         return false;
     }
 
+    //checking if the inputs in inputs view is valid to app data
     private boolean isInputValid() {
-        String badStr = "1234567890!@#$%^&*()_-+={}[]:;?/>.<,~`|";
         uName = etUserName.getText().toString();
         fName = etFirstName.getText().toString();
         lName = etLastName.getText().toString();
         pw = etPassword.getText().toString();
         cpw = etConfirmPassword.getText().toString();
-        if (fName.equals(null) || fName.length() < 2 || fName.length() > 15 || isContainFrom(fName, badStr)) {
-            etFirstName.setError("invalid first name");
+        String fNameError = checkNameValid(fName);
+        String lNameError = checkNameValid(lName);
+        String uNameError = checkNameValid(uName);
+        if (fNameError != null) {
+            etFirstName.setError(fNameError);
             return false;
         }
-        else if (lName.equals(null) || fName.length() < 2 || fName.length() > 15 || isContainFrom(lName, badStr)) {
-            etLastName.setError("invalid last name");
-            return  false;
-        }
-        else if (uName.equals(null) || fName.length() < 4 || fName.length() > 15) {
-            etUserName.setError("invalid user name");
+        else if (lNameError != null){
+            etLastName.setError(lNameError);
             return false;
         }
-        else if (AppData.isUserExit(uName)){
+        else if (uNameError != null && !uNameError.equals("contain only letters")) {
+            etUserName.setError(uNameError);
+            return false;
+        }
+        else if (AppData.isUserExist(uName)){
             etUserName.setError("user name taken try else");
             return false;
         }
@@ -213,5 +223,15 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
             return false;
         }
         return true;
+    }
+
+    //gets string name and checks if its valid name
+    private String checkNameValid(String name){
+        String badStr = "1234567890!@#$%^&*()_-+={}[]:;?/>.<,~`|";
+        if (name.equals(null)) return "cant be empty";
+        else if (fName.length() < 2 ) return "too short";
+        else if (fName.length() > 15) return "too long";
+        else if (isContainFrom(fName, badStr))return  "contain only letters";
+        return null;
     }
 }

@@ -21,9 +21,9 @@ public class BoardTest extends AppCompatActivity implements View.OnClickListener
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         Game game = new Game();
         LinearLayout llGameLayout = findViewById(R.id.llGameLayoutTest);
-        ChessBoard board = new ChessBoard(this, llGameLayout, displayMetrics.widthPixels);
+        ChessBoard board = new ChessBoard(this, llGameLayout, null, null, displayMetrics.widthPixels);
         board.drawBoard(Piece.Color.BLACK);
-        board.drawGamePieces(game.getBoard(), Piece.Color.BLACK);
+        board.drawGamePieces(game.getBoard(), Piece.Color.BLACK, game.getWhiteEatenPieces(), game.getBlackEatenPieces());
     }
 
     @Override

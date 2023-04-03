@@ -46,21 +46,29 @@ public class Coordinate {
         return (char)(col - 1 + A) + Integer.toString(row);
     }
 
+    //gets another coordinate object and checks if it has the same column value
     public boolean inSameCol(Coordinate coordinate){
         return this.col == coordinate.col;
     }
 
+    //gets another coordinate object and checks if it has the same row value
     public boolean inSameRow(Coordinate coordinate){
         return this.row == coordinate.row;
     }
 
+    //gets another coordinate object
+    //returns the difference between its row value to this row value
     public int rowDif(Coordinate coordinate){
         return coordinate.row - this.row;
     }
 
+    //gets another coordinate object
+    //returns the difference between its column value to this column value
     public int colDif(Coordinate coordinate){
         return coordinate.col - this.col;
     }
+
+
     public boolean equals(Object coordinate) {
             return
                     coordinate != null &&

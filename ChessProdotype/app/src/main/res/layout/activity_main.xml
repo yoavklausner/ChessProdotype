@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:id="@+id/main">
+    android:id="@+id/main"
+    android:background="#E4D1B4">
 
 <LinearLayout
     android:layout_width="wrap_content"
@@ -53,13 +54,13 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="face to face game"
+            android:text="offline"
             android:id="@+id/btnStartPhysicalGame"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="find match"
+            android:text=" public "
             android:id="@+id/btnFindMatch"/>
 
     <RelativeLayout
@@ -68,7 +69,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="start private"
+            android:text="private"
             android:id="@+id/btnStartPrivate"/>
     <TextView
         android:layout_width="wrap_content"

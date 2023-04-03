@@ -7,7 +7,8 @@
     tools:context=".VirtualGameActivity"
     android:orientation="vertical"
     android:layout_gravity="center_horizontal"
-    android:gravity="center">
+    android:gravity="center"
+    android:background="#E4D1B4">
 
 
 
@@ -16,7 +17,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="right"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="10dp"
         android:layout_marginTop="20dp"
         >
         <TextView
@@ -45,6 +46,12 @@
         android:id="@+id/tvOpponentTimer"/>
 
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:id="@+id/tvTopEatenPieces"
+        android:textAlignment="center"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -55,10 +62,18 @@
         >
     </LinearLayout>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:id="@+id/tvBottomEatenPieces"
+        android:textAlignment="center"/>
+
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:textSize="20dp"
         android:id="@+id/tvPlayerTimer"/>
 
@@ -66,7 +81,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="20dp"
         android:layout_gravity="right"
         android:layout_marginBottom="20dp"
         >

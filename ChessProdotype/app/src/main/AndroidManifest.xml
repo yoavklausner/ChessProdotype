@@ -38,9 +38,6 @@
         </service>
 
         <activity
-            android:name=".BoardTest"
-            android:exported="false" />
-        <activity
             android:name=".LoadingScreenActivity"
             android:exported="false" />
         <activity
@@ -49,11 +46,15 @@
         <activity
             android:name=".VirtualGameActivity"
             android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"/>
         <activity
             android:name=".PhysicalGameActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

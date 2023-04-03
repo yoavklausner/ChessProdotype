@@ -2,9 +2,8 @@ package com.example.chessprodotype;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,18 +25,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import pieces.Bishop;
-import pieces.Knight;
 import pieces.Piece;
-import pieces.Queen;
-import pieces.Rook;
 
 public class VirtualGameActivity extends GameActivity implements View.OnClickListener, ChessGameView, ValueEventListener {
 
 
     Piece.Color playerColor;
     String gameCode, opponentUserName = null;
+    User opponent;
     String target = null;
+
+    //online game connection strings constants
     public static final String WAITING = "WAITING";
     public static final String JOINING = "JOINING";
     public static final String START_PRIVATE = "START_PRIVATE";
@@ -47,26 +44,18 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
     public static final String COLOR = "COLOR";
     public static final String TARGET = "TARGET";
     //ChessTimer playerTimer, opponentTimer;
-    ChessBoard board;
+
+    //player turns info displays
     TextView tvLastMoveDisplay;
     TextView tvTurnDisplay;
     TextView tvOpponentUserName, tvOpponentRank;
     //TextView tvPlayerTimer, tvOpponentTimer;
-    Dialog d;
-    Button btnRestartMatch;
-    Button btnGoToMenu;
 
-    private Button btnKnight;
-    private Button btnBishop;
-    private Button btnRook;
-    private Button btnQueen;
     Intent serviceIntent;
+
+    //represents the stage of game
+    //(can quit or progression has been made?)
     public int gameSessionStage;
-    int notificationID = 1;
-    int counter = 1;
-    final String CHANNEL_ID = "MyApp";
-    final String CHANNEL_NAME = "MyApp";
-    final String CHANNEL_DESC = "ChessApp ...";
 
     public static boolean isGameRunning;
 
@@ -89,14 +78,18 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
             seconds = seconds % 60;
             int milliseconds = (int) (elapsedMillis % 1000);
 
+            if (minutes >= 1) {
+                tvWaitingTime.setText("disconnecting...");
+                cancelActivity();
+
+            }
+
             tvWaitingTime.setText("time left for waiting: " +
-                    String.format("%02d:%02d:%03d", 5 - minutes - 1, 60 - seconds - 1, 1000 - milliseconds));
+                    String.format("%02d:%02d:%03d", 1 - minutes - 1, 60 - seconds - 1, 1000 - milliseconds));
 
             timerHandler.postDelayed(this, REFRESH_RATE);
-            if (minutes >= 5) {
-                stopTimer();
-                cancelActivity();
-            }
+
+
         }
     };
 
@@ -112,7 +105,6 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
 
     private void stopTimer() {
         scheduledFuture.cancel(true);
-        scheduler.shutdown();
     }
 
     @Override
@@ -129,7 +121,9 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
         tvOpponentRank = findViewById(R.id.tvOpponentRank);
         //tvPlayerTimer = findViewById(R.id.tvPlayerTimer);
         //tvOpponentTimer = findViewById(R.id.tvOpponentTimer);
-        board = new ChessBoard(this, llGameLayout, displayMetrics.widthPixels);
+        tvTopEatenPieces = findViewById(R.id.tvTopEatenPieces);
+        tvBottomEatenPieces = findViewById(R.id.tvBottomEatenPieces);
+        board = new ChessBoard(this, llGameLayout, tvTopEatenPieces, tvBottomEatenPieces, displayMetrics.widthPixels);
         Intent intent = getIntent();
         playerColor = (Piece.Color) intent.getSerializableExtra(COLOR);
         gameCode = intent.getStringExtra(GAME_CODE);
@@ -149,41 +143,57 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
         }
         else if (target.equals(JOINING_PRIVATE)){
             opponentUserName = gameCode;
+            AppData.removeGameInvite(gameCode);
             joinGameCode("private waiting players");
         }
     }
 
-
+    //gets the opponents user name and connecting to private match as host
+    //inviting opponent and waiting for connection
     private void startPrivateGame(String opponentUserName){
         showWaitingForOpponentMsg();
         AppData.fbRef.child("private waiting players").child(gameCode).child("color").setValue(playerColor, (error, ref) -> {
             if (error == null){
-                AppData.sendGameInvite(this, opponentUserName, playerColor);
-                startService(serviceIntent);
-                AppData.fbRef.child("private waiting players").child(gameCode).addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (snapshot.getValue() == null) {
-                            Log.d("activity cancelled", "opponent left");
-                            cancelActivity();
-                        }
-                        String uName = snapshot.child("user name").getValue(String.class);
-                        if (uName != null && uName.equals(opponentUserName)){
-                            AppData.fbRef.child("private waiting players").child(gameCode).removeEventListener(this);
-                            ackJoiningAndStartGame("private waiting players", uName);
-                        }
-                    }
+                AppData.fbRef.child("users").child(opponentUserName).child("game invites").child(AppData.user.getUserName()).child("notification sent").setValue(false, (error1, ref1) ->{
+                    if (error1 == null) {
+                        AppData.fbRef.child("users").child(opponentUserName).child("game invites").child(AppData.user.getUserName()).child("color").setValue(playerColor, (error2, ref2) -> {
+                            if (error2 == null) {
+                                startService(serviceIntent);
+                                AppData.fbRef.child("private waiting players").child(gameCode).addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                        if (snapshot.getValue() == null) {
+                                            Log.d("activity cancelled", "opponent left");
+                                            cancelActivity();
+                                        }
+                                        String uName = snapshot.child("user name").getValue(String.class);
+                                        if (uName != null && uName.equals(opponentUserName)) {
+                                            AppData.fbRef.child("private waiting players").child(gameCode).removeEventListener(this);
+                                            ackJoiningAndStartGame("private waiting players", uName);
+                                        }
+                                    }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Log.d("joining listening", "failed to get opponent u name", error.toException());
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {
+                                        Log.d("joining listening", "failed to get opponent u name", error.toException());
+                                    }
+                                });
+                                Toast.makeText(this, "game invite has sent to " + opponentUserName, Toast.LENGTH_LONG).show();
+                            } else {
+                                AppData.fbRef.child("users").child(opponentUserName).child("game invites").child(AppData.user.getUserName()).removeValue();
+                                Toast.makeText(this, "game invite sending has failed!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }else {
+                        cancelActivity();
+                        Toast.makeText(this, "game invite sending has been failed!", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
         });
     }
 
-
+    //showing friends dialog for selecting opponent to private match
     private void showFriendsDialog(){
         // setup the alert builder
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
@@ -210,6 +220,8 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
     }
 
 
+    //gets string waiting field indicates if game is private or public
+    //waiting to session host to acknowledge joining and then starting game
     private void joinGameCode(String waitingField) {
         showWaitingForOpponentMsg();
         AppData.fbRef.child(waitingField).child(gameCode).child("user name").setValue(AppData.user.getUserName(), (error, ref) -> {
@@ -241,6 +253,7 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
         });
     }
 
+    //showing text and timer for waiting to opponent
     private void showWaitingForOpponentMsg(){
         tvWaitingTime = new TextView(this);
         tvWaitingMsg = new TextView(this);
@@ -252,6 +265,7 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
         startTimer();
     }
 
+    //start a public game session and waiting for some opponent to connect
     private void startWaitingForPublicOpponent(){
         showWaitingForOpponentMsg();
         AppData.fbRef.child("waiting players").child(gameCode).child("color").setValue(playerColor, (error, ref) -> {
@@ -280,6 +294,7 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
         });
     }
 
+    //after opponent has connected to game session, creating acknowledgment for opponent joining and starting game
     private void ackJoiningAndStartGame(String field, String opponentUname){
         AppData.fbRef.child(field).child(gameCode).child("ack msg").setValue("ack", (error, ref) -> {
            if (error == null){
@@ -297,13 +312,14 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
 
     @Override
     public void initGameActivity() {
+        opponent = AppData.users.get(opponentUserName);
         AppData.fbRef.child("waiting players").child(gameCode).removeEventListener(this);
         game = new Game();
         board.drawBoard(playerColor);
-        board.drawGamePieces(game.getBoard(), playerColor);
+        board.drawGamePieces(game.getBoard(), playerColor, game.getWhiteEatenPieces(), game.getBlackEatenPieces());
         tvLastMoveDisplay.setText("");
         tvOpponentUserName.setText("opponent: " + opponentUserName);
-        tvOpponentRank.setText("rank: " + AppData.getUser(opponentUserName).getRank());
+        tvOpponentRank.setText("rank: " + opponent.getRank());
         if (playerColor == Piece.Color.WHITE)
             tvTurnDisplay.setText("your turn");
         else tvTurnDisplay.setText("opponent's turn");
@@ -321,54 +337,30 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
 
     }
 
-    @Override
-    public void checkStartPressedSquare(Coordinate coordinate) {
-        if (game.isStartCoordinateValid(coordinate)) {
-            startCoordinate = coordinate;
-            board.markChosenSquare(coordinate);
-        } else
-            Toast.makeText(this, "invalid start: " + coordinate + "; try again!", Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void boardButtonsAction(Button btn) {
-        int row = (int) btn.getId() / 10 + 1;
-        int col = (int) btn.getId() % 10 + 1;
-        Coordinate coordinate = new Coordinate(row, col);
-        if (startCoordinate == null) checkStartPressedSquare(coordinate);
-        else {
-            endCoordinate = coordinate;
-            doMove();
-            if (game.isCheckmate()) declareCheckmate();
-            else if (game.isPat()) declareDraw();
-        }
-    }
 
     public void declareDraw(){
-        String pat = "game ended with draw";
+        declareDraw();
         //if (game.getTurn() == Piece.Color.BLACK) blackTimer.pauseTimer();
         //else whiteTimer.pauseTimer();
-        tvTurnDisplay.setText(pat);
-        board.setEnabledBtnGrid(false);
-        createEndGameDialog(pat);
+        tvTurnDisplay.setText("");
     }
 
     @Override
     public void declareCheckmate() {
-        String endGameMsg;
+        String gameResult;
         if (game.getTurn() != playerColor){
-            endGameMsg = "game won";
+            gameResult = "game won";
             //opponentTimer.pauseTimer();
-            AppData.user.increaseRank(AppData.getUser(opponentUserName).getRank());
+            AppData.user.increaseRank(opponent.getRank());
         }
         else{
-            endGameMsg = "game lost";
+            gameResult = "game lost";
             //playerTimer.pauseTimer();
-            AppData.user.decreaseRank(AppData.getUser(opponentUserName).getRank());
+            AppData.user.decreaseRank(opponent.getRank());
         }
-        tvTurnDisplay.setText(endGameMsg);
+        tvTurnDisplay.setText(gameResult);
         board.setEnabledBtnGrid(false);
-        createEndGameDialog(endGameMsg);
+        createEndGameDialog(gameResult);
     }
 
     @Override
@@ -390,18 +382,18 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
 
     @Override
     public void doMove() {
-        move = game.getPieceInCoordinate(startCoordinate).getPieceChar() + " " + startCoordinate + " -> " + endCoordinate;
+        recentMoveDescription = game.getPieceInCoordinate(startCoordinate).getPieceChar() + " " + startCoordinate + " -> " + endCoordinate;
         if (!endCoordinate.equals(startCoordinate)) {
-            if (game.checkEndAndMove(startCoordinate, endCoordinate)) {
-                move = game.getLastMove();
+            if (game.checkMoveAndMove(startCoordinate, endCoordinate)) {
+                recentMoveDescription = game.getLastMove();
                 if (game.getWaitingForPawnPromotionCoordinate() != null) showPawnPromotionDialog();
-                else uploadGameAndFinishTurn(move);
+                else uploadGameAndFinishTurn(recentMoveDescription);
             }
-            else Toast.makeText(this, "invalid move: " + move, Toast.LENGTH_SHORT).show();
+            else Toast.makeText(this, "invalid move: " + recentMoveDescription, Toast.LENGTH_SHORT).show();
         }
         else {
             board.drawBoard(playerColor);
-            board.drawGamePieces(game.getBoard(), playerColor);
+            board.drawGamePieces(game.getBoard(), playerColor, game.getWhiteEatenPieces(), game.getBlackEatenPieces());
             startCoordinate = null;
         }
     }
@@ -409,15 +401,17 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
     @Override
     public void continueTurn() {
         super.continueTurn();
-        uploadGameAndFinishTurn(move);
+        uploadGameAndFinishTurn(recentMoveDescription);
     }
 
+    //gets string move description
+    //uploading game state to data-base and doing finish turn functionality
     private void uploadGameAndFinishTurn(String move){
         AppData.fbRef.child("games").child(gameCode).child("game state").setValue(game, (error, ref) -> {
             if (error == null){
                 tvLastMoveDisplay.setText("last move: " + move);
                 board.drawBoard(playerColor);
-                board.drawGamePieces(game.getBoard(), playerColor);
+                board.drawGamePieces(game.getBoard(), playerColor, game.getWhiteEatenPieces(), game.getBlackEatenPieces());
                 switchTurnDisplay();
                 startCoordinate = null;
             }
@@ -429,62 +423,37 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
     @Override
     public void createEndGameDialog(String endGameMsg) {
         AppData.fbRef.child("games").child(gameCode).removeEventListener(this);
-        AppData.uploadUserState(this);
-        d = new Dialog(this);
-        d.setContentView(R.layout.chackmate_dialog);
-        d.setTitle("end game");
-        tvEndGameMessage = d.findViewById(R.id.tvWinner);
-        btnRestartMatch = d.findViewById(R.id.btnRestartMatch);
-        btnGoToMenu = d.findViewById(R.id.btnGoToMenu);
-        tvEndGameMessage.setText(endGameMsg + ", new rank: " + AppData.user.getRank());
+        AppData.uploadUserNewRank(this);
+        super.createEndGameDialog(endGameMsg + ", new rank: " + AppData.user.getRank());
+        btnRestartMatch.setClickable(false);
         btnRestartMatch.setVisibility(View.INVISIBLE);
-        btnGoToMenu.setOnClickListener(this);
-        d.show();
     }
-
-
 
 
     @Override
     public void onClick(View view) {
+        super.onClick(view);
         Button btn;
-        Piece.Color color = Piece.Color.WHITE;
-        if (game.getTurn() == Piece.Color.WHITE) color = Piece.Color.BLACK;
         if (view instanceof Button) {
             btn = (Button) view;
             if (btn == btnGoToMenu){
                 setResult(RESULT_OK);
+                dialog.dismiss();
+                isGameRunning = false;
                 finish();
             }
-            else if (btn == btnKnight){
-                game.setPawnPromotionPiece(new Knight(color));
-                continueTurn();
-            }
-            else if (btn == btnBishop){
-                game.setPawnPromotionPiece(new Bishop(color));
-                continueTurn();
-            }
-            else if (btn == btnRook){
-                game.setPawnPromotionPiece(new Rook(color));
-                continueTurn();
-            }
-            else if (btn == btnQueen){
-                game.setPawnPromotionPiece(new Queen(color));
-                continueTurn();
-            }
-            else boardButtonsAction(btn);
         }
     }
 
     @Override
     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        Game fbGame = AppData.getGameFromDataBase(dataSnapshot.child("game state"));
+        Game fbGame = GameSerializer.getGameFromDataSnapshot(dataSnapshot.child("game state"));
         if (fbGame != null && fbGame.getTurn() == playerColor) {
             gameSessionStage = 1;
             game = fbGame;
             switchTurnDisplay();
             board.drawBoard(playerColor);
-            board.drawGamePieces(game.getBoard(), playerColor);
+            board.drawGamePieces(game.getBoard(), playerColor, game.getWhiteEatenPieces(), game.getBlackEatenPieces());
             tvLastMoveDisplay.setText("last move: " + game.getLastMove());
             if (game.isCheckmate()) declareCheckmate();
             else if (game.isPat()) declareDraw();
@@ -516,6 +485,10 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
         builder.setCancelable(false);
         builder.setPositiveButton("Yes, I'm sure", (DialogInterface.OnClickListener) (dialog, which) -> {
             // When the user click yes button then app will close
+            if (gameSessionStage != 0) {
+                AppData.user.decreaseRank(AppData.getUser(opponentUserName).getRank());
+                AppData.uploadUserNewRank(this);
+            }
             if (target.equals(START_PRIVATE)){
                 AppData.uninviteToGame(opponentUserName);
             }
@@ -532,14 +505,18 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
         alertDialog.show();
     }
 
+    //canceling activity, quitting game activity and reset all necessary data fields
     public void cancelActivity(){
+        stopTimer();
         Intent intent = new Intent();
         intent.putExtra("GAME_CODE", gameCode);
         setResult(RESULT_CANCELED, intent);
         stopService(serviceIntent);
+        AppData.fbRef.child("games").child(gameCode).removeEventListener(this);
         AppData.uninviteToGame(opponentUserName);
         isGameRunning = false;
         AppData.uninviteToGame(opponentUserName);
+        AppData.removeGameFields(gameCode);
         finish();
     }
 }

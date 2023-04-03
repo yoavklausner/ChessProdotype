@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     tools:context=".SearchUserActivity"
     android:gravity="center_horizontal"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#E4D1B4">
 
 
 

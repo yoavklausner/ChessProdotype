@@ -1,0 +1,29 @@
+[33mcommit 4d51fd8e6beace20d55289e9eee8269ec4360bf3[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: yoavklausner <klausner.yoav@gmail.com>
+Date:   Tue Apr 4 01:40:42 2023 +0300
+
+    finished project, alpha version
+
+[33mcommit a09f5f2bbd5b436d4b6e2daee9f4a8e4d38ea641[m
+Author: yoavklausner <klausner.yoav@gmail.com>
+Date:   Wed Mar 8 23:29:35 2023 +0200
+
+    finished proj with bugs and no bots
+
+[33mcommit 232596a17c72c80e3c06625608fedca53f09dd2d[m
+Author: yoavklausner <klausner.yoav@gmail.com>
+Date:   Sun Feb 26 17:03:55 2023 +0200
+
+    mend
+
+[33mcommit 8ce1dd4915e523627ab1e5ec19f19de312daaaed[m
+Author: yoavklausner <klausner.yoav@gmail.com>
+Date:   Sat Feb 25 23:22:25 2023 +0200
+
+    this commit added the android studio project
+
+[33mcommit 690f1a7279a447f1cdf0fe453765c58400feb43d[m
+Author: yoavklausner <78796379+yoavklausner@users.noreply.github.com>
+Date:   Tue Feb 21 20:19:31 2023 +0200
+
+    Initial commit

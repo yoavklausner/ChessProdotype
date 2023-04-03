@@ -44,24 +44,34 @@ public class UserMessagesService extends Service {
 
     }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        userName = AppData.user.getUserName();
+        setUserNotificationListen();
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    //gets data to notification
+    // create pending intent according to the notification type (game invite or friend request)
     public PendingIntent createIntentByMsgData(HashMap<String, String> data){
         Intent intent;
         String type = data.get(AppData.TYPE);
         String sender = data.get(AppData.U_NAME);
         if (type.equals(AppData.FRIEND_REQ_NTF)){
             intent = new Intent(this, MainActivity.class);
-            return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+            return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         }
         else{
             // Create an Intent for the activity you want to start
             intent = new Intent(this, VirtualGameActivity.class);
             Piece.Color color = Piece.Color.WHITE;
-            if (data.get("COLOR") == "WHITE") color = Piece.Color.BLACK;
+            if (data.get("COLOR").equals("WHITE")) color = Piece.Color.BLACK;
             intent.putExtra(VirtualGameActivity.COLOR, color);
             intent.putExtra(VirtualGameActivity.GAME_CODE, sender);
             intent.putExtra(VirtualGameActivity.TARGET, VirtualGameActivity.JOINING_PRIVATE);
 // Create the TaskStackBuilder and add the intent, which inflates the back stack
             TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+            stackBuilder.addParentStack(MainActivity.class);
             stackBuilder.addNextIntentWithParentStack(intent);
 // Get the PendingIntent containing the entire back stack
             return stackBuilder.getPendingIntent(MainActivity.VIRTUAL_GAME_INTENT,
@@ -70,6 +80,7 @@ public class UserMessagesService extends Service {
     }
 
 
+    //gets message data and sending notification to this phone
     private void sendNotification(HashMap<String, String> data) {
         PendingIntent pendingIntent = createIntentByMsgData(data);
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -98,13 +109,8 @@ public class UserMessagesService extends Service {
         notificationManager.notify(0, notificationBuilder.build());
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        userName = AppData.user.getUserName();
-        setUserNotificationListen();
-    }
 
+    //setting a listening to friend request and game invites in the data-base
     public void setUserNotificationListen(){
         AppData.fbRef.child("users").child(userName).child("friend requests").addValueEventListener(new ValueEventListener() {
             @Override
@@ -126,9 +132,7 @@ public class UserMessagesService extends Service {
                             data.put(AppData.TYPE, AppData.FRIEND_REQ_NTF);
                             data.put(AppData.U_NAME, sender);
                             sendNotification((HashMap<String, String>) data);
-                        }
-                        else {
-                            AppData.fbRef.child("users").child(userName).child("friend requests").child(sender).removeValue();
+                            AppData.fbRef.child("users").child(userName).child("friend requests").child(sender).setValue(true);
                         }
                         AppData.friendRequests.put(sender, sender);
                     }
@@ -172,15 +176,15 @@ public class UserMessagesService extends Service {
                                 data.put(AppData.U_NAME, sender);
                                 data.put("COLOR", color.toString());
                                 sendNotification((HashMap<String, String>) data);
-                            } else {
-                                AppData.fbRef.child("users").child(userName).child("game invites").child(childSnapShot.getKey()).removeValue();
+                                AppData.fbRef.child("users").child(userName).child("game invites").child(sender).child("notification sent").setValue(true);
                             }
                             AppData.gameInvites.put(sender, color);
                         }
                     }
                 }
                 else {
-                    if (tvAlert != null) tvAlert.setVisibility(View.INVISIBLE);
+                    if (tvAlert != null)
+                        tvAlert.setVisibility(View.INVISIBLE);
                 }
             }
 
@@ -191,6 +195,11 @@ public class UserMessagesService extends Service {
         });
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopSelf();
+    }
 
     @Nullable
     @Override

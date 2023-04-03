@@ -1,5 +1,6 @@
 package com.example.chessprodotype;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,7 +19,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Set;
 
 public class SearchUserActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
@@ -74,8 +80,10 @@ public class SearchUserActivity extends AppCompatActivity implements View.OnClic
             if (name != null && name.length() > 1) {
                 for (User user :
                         AppData.users.values()) {
-                    if (user.getUserName().equals(name) || user.getFirstName().equals(name) || user.getLastName().equals(name)) {
-                        searchedUsers.add(user.getUserName());
+                    if (!user.getUserName().equals(AppData.user.getUserName())) {
+                        if (user.getUserName().equals(name) || user.getFirstName().equals(name) || user.getLastName().equals(name)) {
+                            searchedUsers.add(user.getUserName());
+                        }
                     }
                 }
             }
@@ -93,7 +101,27 @@ public class SearchUserActivity extends AppCompatActivity implements View.OnClic
                 dialog.cancel();
                 userDialog.cancel();
                 userDialog.dismiss();
-                AppData.sendFriendRequest(this, uName);
+                AppData.fbRef.child("users").child(uName).child("friend requests").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        boolean isRequestSent = false;
+                        for (DataSnapshot child :
+                                snapshot.getChildren()) {
+                            if (child.getKey().equals(AppData.user.getUserName()))
+                                isRequestSent = true;
+                        }
+                        if (!isRequestSent)
+                            AppData.sendFriendRequest(SearchUserActivity.this, uName);
+                        else
+                            Toast.makeText(SearchUserActivity.this, "friend request has already been sent.", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(SearchUserActivity.this, "friend request sending has failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
             });
             builder.setNegativeButton("No, cancel", (DialogInterface.OnClickListener) (dialog, which) -> {
                 // If user click no then dialog box is canceled.
