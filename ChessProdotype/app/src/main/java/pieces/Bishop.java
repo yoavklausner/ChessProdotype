@@ -3,6 +3,10 @@ package pieces;
 import com.example.chessprodotype.Coordinate;
 
 public class Bishop extends Piece {
+
+    /*
+    extends piece class - represent bishop chess piece
+     */
     public static final char WHITE_SIGN = '♗';
     public static final char BLACK_SIGN = '♝';
     public Bishop(Bishop bishop) {super(bishop);}

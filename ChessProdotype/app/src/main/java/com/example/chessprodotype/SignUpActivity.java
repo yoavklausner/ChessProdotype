@@ -7,6 +7,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -20,6 +22,11 @@ import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 
 public class SignUpActivity extends AppCompatActivity implements View.OnClickListener {
+
+    /*
+    sign up activity. responsible for getting user data from the user and checking
+    if it valids and if so then to creates new user and uploading it to the firebase.
+     */
 
     EditText etFirstName;
     EditText etLastName;
@@ -134,6 +141,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     private void createSetImageDialog() {
         d = new Dialog(this);
         d.setContentView(R.layout.set_image_dialog);
+        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.setTitle("select image source");
         btnGoToCamera = d.findViewById(R.id.btnGoToCamera);
         btnGoToGallery = d.findViewById(R.id.btnGoToGallery);

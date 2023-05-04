@@ -12,7 +12,9 @@ import pieces.Piece;
 import pieces.Queen;
 import pieces.Rook;
 
-public class GameSerializer {
+public abstract class GameSerializer {
+
+
 
     //gets data base snapshot of game data field
     //return game object according to data

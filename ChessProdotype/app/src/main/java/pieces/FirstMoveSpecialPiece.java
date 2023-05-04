@@ -2,7 +2,13 @@ package pieces;
 
 import com.example.chessprodotype.Coordinate;
 
-public class FirstMoveSpecialPiece extends Piece {
+public abstract class FirstMoveSpecialPiece extends Piece {
+
+    /*
+    extends Piece class, adding moved attribute that indicates if the object has moved in the game.
+    class is abstract - cannot generate objects
+     */
+
     protected boolean moved;
 
     public FirstMoveSpecialPiece(Piece.Color color, int value, char whiteSign, char blackSign){

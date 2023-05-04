@@ -7,12 +7,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import pieces.Piece;
 
 public class ChessBoard {
+
+    /*
+    this class generates chess board objects which are responsible for drawing
+    a chess board on the layout and in the context which are given in the args.
+    also responsible for the functionality of the visibility of the board.
+     */
+
+
     public static final int SIZE = 8;
     private static final int A = 'A';
 
@@ -57,7 +64,7 @@ public class ChessBoard {
                     }
                     else {
                         btnGrid[i][j].setTextColor(Color.BLACK);
-                        if (context instanceof  PhysicalGameActivity)
+                        if (context instanceof OfflineGameActivity)
                             btnGrid[i][j].setRotation(180);
                     }
                 }
@@ -68,7 +75,7 @@ public class ChessBoard {
             tvTopEatenPieces.setText(whiteEatenPieces);
         }
         else { tvBottomEatenPieces.setText(whiteEatenPieces); tvTopEatenPieces.setText(blackEatenPieces);}
-        if (context instanceof PhysicalGameActivity) {
+        if (context instanceof OfflineGameActivity) {
             tvTopEatenPieces.setRotation(180);
         }
     }

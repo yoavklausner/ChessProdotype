@@ -3,6 +3,11 @@ package pieces;
 import com.example.chessprodotype.Coordinate;
 
 public class Queen extends Piece {
+
+    /*
+    extends piece class - represent queen chess piece
+     */
+
     public static final char WHITE_SIGN = '♕';
     public static final char BLACK_SIGN = '♛';
     public Queen(Queen queen) {super(queen);}

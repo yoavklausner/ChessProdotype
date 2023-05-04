@@ -23,7 +23,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import pieces.Piece;
 
-public class AppData extends Application {
+public abstract class AppData extends Application {
+    /*
+    this class is responsible for the connection with the firebase and to all the main functionalities
+    and manipulations on the data base data and on the updated general data of the program
+     */
+
 
     //general app data
     public static HashMap<String, User> users = new HashMap<>();

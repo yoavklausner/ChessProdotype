@@ -14,6 +14,11 @@ import pieces.Rook;
 
 public class Game {
 
+    /*
+    generates game objects containing all chess game data and does all game rules and turns
+    operations and functionalities.
+     */
+
     private HashMap<String, Piece> whitePieces;
     private HashMap<String, Piece> blackPieces;
 

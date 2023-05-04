@@ -1,6 +1,12 @@
 package com.example.chessprodotype;
 
 public class Coordinate {
+
+    /*
+    generates coordinate objects which contain row and column values.
+    responsible for all functionality and comparisons methods
+     */
+
     private int row;
     private int col;
     private static final int A = 'A';

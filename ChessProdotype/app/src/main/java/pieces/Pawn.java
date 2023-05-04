@@ -6,6 +6,10 @@ import java.util.ArrayList;
 
 public class Pawn extends FirstMoveSpecialPiece {
 
+    /*
+        extends first move special piece class class - represent pawn chess piece
+     */
+
     public static final char WHITE_SIGN = '♙';
     public static final char BLACK_SIGN = '♟';
 

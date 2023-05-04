@@ -14,11 +14,16 @@
     android:orientation="horizontal"
     android:layout_alignParentTop="true"
     android:layout_centerInParent="true"
+    android:layout_marginTop="10dp"
     >
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+
+        android:layout_marginLeft="15dp"
         >
+
+
     <ImageView
         android:layout_width="70dp"
         android:layout_height="70dp"
@@ -40,7 +45,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="hello, \n to unlock online features please login"
-        android:textSize="15dp"
+        android:textSize="20dp"
+        android:layout_marginTop="5dp"
         android:id="@+id/tvHelloMsg"
         />
 </LinearLayout>
@@ -55,12 +61,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="offline"
+            android:textSize="30dp"
             android:id="@+id/btnStartPhysicalGame"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=" public "
+            android:textSize="30dp"
             android:id="@+id/btnFindMatch"/>
 
     <RelativeLayout
@@ -70,6 +78,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="private"
+            android:textSize="30dp"
             android:id="@+id/btnStartPrivate"/>
     <TextView
         android:layout_width="wrap_content"

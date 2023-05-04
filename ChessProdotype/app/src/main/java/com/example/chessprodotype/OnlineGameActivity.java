@@ -3,16 +3,15 @@ package com.example.chessprodotype;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,20 +19,20 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
 import pieces.Piece;
 
-public class VirtualGameActivity extends GameActivity implements View.OnClickListener, ChessGameView, ValueEventListener {
+public class OnlineGameActivity extends GameActivity implements View.OnClickListener, ChessGameView, ValueEventListener {
+
+    /*
+    a game activity but virtual online one. cna be private one or public one (invite based or open seat based)
+     */
 
 
     Piece.Color playerColor;
     String gameCode, opponentUserName = null;
     User opponent;
     String target = null;
+    Timer waitingForOpponentTimer;
 
     //online game connection strings constants
     public static final String WAITING = "WAITING";
@@ -59,52 +58,17 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
 
     public static boolean isGameRunning;
 
-    //todo: a system of firebase messages to check players internet and remote game connection
+    class OpponentWaitingTimer extends Timer{
 
-    private long startTime;
-    private TextView tvWaitingTime;
-    private TextView tvWaitingMsg;
-    private final int REFRESH_RATE = 100;
-
-    private Handler timerHandler = new Handler();
-    protected final Runnable opponentWaitingTimer = new Runnable() {
+        public OpponentWaitingTimer(OnlineGameActivity activity, TextView tv, double mins){
+            super(activity, tv, mins);
+        }
 
         @Override
-
-        public void run() {
-            long elapsedMillis = SystemClock.elapsedRealtime() - startTime;
-            int seconds = (int) (elapsedMillis / 1000);
-            int minutes = seconds / 60;
-            seconds = seconds % 60;
-            int milliseconds = (int) (elapsedMillis % 1000);
-
-            if (minutes >= 1) {
-                tvWaitingTime.setText("disconnecting...");
-                cancelActivity();
-
-            }
-
-            tvWaitingTime.setText("time left for waiting: " +
-                    String.format("%02d:%02d:%03d", 1 - minutes - 1, 60 - seconds - 1, 1000 - milliseconds));
-
-            timerHandler.postDelayed(this, REFRESH_RATE);
-
-
+        protected void finishTimer() {
+            super.finishTimer();
+            ((OnlineGameActivity)super.activity).cancelActivity();
         }
-    };
-
-
-
-
-    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> scheduledFuture;
-
-    private void startTimer(){
-        scheduledFuture = scheduler.scheduleAtFixedRate(opponentWaitingTimer, 0, REFRESH_RATE, TimeUnit.MILLISECONDS);
-    }
-
-    private void stopTimer() {
-        scheduledFuture.cancel(true);
     }
 
     @Override
@@ -239,7 +203,7 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
                             AppData.fbRef.child(waitingField).child(gameCode).removeEventListener(this);
                             AppData.fbRef.child(waitingField).child(gameCode).removeValue();
                             AppData.removeGameInvite(gameCode);
-                            stopTimer();
+                            waitingForOpponentTimer.pauseTimer();
                             initGameActivity();
                         }
                     }
@@ -255,14 +219,22 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
 
     //showing text and timer for waiting to opponent
     private void showWaitingForOpponentMsg(){
-        tvWaitingTime = new TextView(this);
-        tvWaitingMsg = new TextView(this);
-        tvWaitingMsg.setText("waiting for opponent...");
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.gravity = Gravity.CENTER;
+        TextView tvWaitingTime = new TextView(this);
+        TextView tvWaitingMsg = new TextView(this);
+        tvWaitingMsg.setTextSize(25);
+        tvWaitingTime.setTextSize(25);
+        tvWaitingMsg.setText("waiting for opponent...\n time remaining:");
+        tvWaitingMsg.setLayoutParams(params);
+        tvWaitingTime.setLayoutParams(params);
         llGameLayout.addView(tvWaitingMsg);
         llGameLayout.addView(tvWaitingTime);
-        startTime = SystemClock.elapsedRealtime();
-        timerHandler.postDelayed(opponentWaitingTimer, 0);
-        startTimer();
+        waitingForOpponentTimer = new OpponentWaitingTimer(this, tvWaitingTime, 1);
+        waitingForOpponentTimer.resumeTimer();
     }
 
     //start a public game session and waiting for some opponent to connect
@@ -299,7 +271,7 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
         AppData.fbRef.child(field).child(gameCode).child("ack msg").setValue("ack", (error, ref) -> {
            if (error == null){
                opponentUserName = opponentUname;
-               stopTimer();
+               waitingForOpponentTimer.pauseTimer();
                initGameActivity();
            }
            else {
@@ -415,13 +387,14 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
                 switchTurnDisplay();
                 startCoordinate = null;
             }
-            else Toast.makeText(VirtualGameActivity.this, "failed to upload turn", Toast.LENGTH_SHORT).show();
+            else Toast.makeText(OnlineGameActivity.this, "failed to upload turn", Toast.LENGTH_SHORT).show();
         });
     }
 
 
     @Override
     public void createEndGameDialog(String endGameMsg) {
+        gameSessionStage = 2;
         AppData.fbRef.child("games").child(gameCode).removeEventListener(this);
         AppData.uploadUserNewRank(this);
         super.createEndGameDialog(endGameMsg + ", new rank: " + AppData.user.getRank());
@@ -447,24 +420,24 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
 
     @Override
     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-        Game fbGame = GameSerializer.getGameFromDataSnapshot(dataSnapshot.child("game state"));
-        if (fbGame != null && fbGame.getTurn() == playerColor) {
-            gameSessionStage = 1;
-            game = fbGame;
-            switchTurnDisplay();
-            board.drawBoard(playerColor);
-            board.drawGamePieces(game.getBoard(), playerColor, game.getWhiteEatenPieces(), game.getBlackEatenPieces());
-            tvLastMoveDisplay.setText("last move: " + game.getLastMove());
-            if (game.isCheckmate()) declareCheckmate();
-            else if (game.isPat()) declareDraw();
-            Log.d("game state", "succeed");
-        }
-        else if (dataSnapshot.child(AppData.user.getUserName()).getValue(String.class) == null){
-            if (gameSessionStage != 0) {
-                AppData.user.increaseRank(AppData.getUser(opponentUserName).getRank());
-                createEndGameDialog("game won, opponent quit");
+        if (isGameRunning) {
+            Game fbGame = GameSerializer.getGameFromDataSnapshot(dataSnapshot.child("game state"));
+            if (fbGame != null && fbGame.getTurn() == playerColor) {
+                gameSessionStage = 1;
+                game = fbGame;
+                switchTurnDisplay();
+                board.drawBoard(playerColor);
+                board.drawGamePieces(game.getBoard(), playerColor, game.getWhiteEatenPieces(), game.getBlackEatenPieces());
+                tvLastMoveDisplay.setText("last move: " + game.getLastMove());
+                if (game.isCheckmate()) declareCheckmate();
+                else if (game.isPat()) declareDraw();
+                Log.d("game state", "succeed");
+            } else if (dataSnapshot.child(AppData.user.getUserName()).getValue(String.class) == null) {
+                if (gameSessionStage != 0) {
+                    AppData.user.increaseRank(AppData.getUser(opponentUserName).getRank());
+                    createEndGameDialog("game won, opponent quit");
+                } else cancelActivity();
             }
-            else cancelActivity();
         }
     }
 
@@ -472,42 +445,48 @@ public class VirtualGameActivity extends GameActivity implements View.OnClickLis
 
     @Override
     public void onCancelled(@NonNull DatabaseError databaseError) {
-        Log.w("game state", "failed", databaseError.toException());
-        cancelActivity();
+        if (isGameRunning) {
+            Log.w("game state", "failed", databaseError.toException());
+            cancelActivity();
+        }
     }
 
 
     @Override
     public void onBackPressed() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("select option");
-        builder.setMessage("do you sure you want to leave game?");
-        builder.setCancelable(false);
-        builder.setPositiveButton("Yes, I'm sure", (DialogInterface.OnClickListener) (dialog, which) -> {
-            // When the user click yes button then app will close
-            if (gameSessionStage != 0) {
-                AppData.user.decreaseRank(AppData.getUser(opponentUserName).getRank());
-                AppData.uploadUserNewRank(this);
-            }
-            if (target.equals(START_PRIVATE)){
-                AppData.uninviteToGame(opponentUserName);
-            }
-            dialog.cancel();
-            cancelActivity();
-        });
-        builder.setNegativeButton("No, cancel", (DialogInterface.OnClickListener) (dialog, which) -> {
-            // If user click no then dialog box is canceled.
-            dialog.cancel();
-        });
-        // Create the Alert dialog
-        AlertDialog alertDialog = builder.create();
-        // Show the Alert Dialog box
-        alertDialog.show();
+        if (gameSessionStage != 2) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("select option");
+            builder.setMessage("do you sure you want to leave game?");
+            builder.setCancelable(false);
+            builder.setPositiveButton("Yes, I'm sure", (DialogInterface.OnClickListener) (dialog, which) -> {
+                // When the user click yes button then app will close
+                if (gameSessionStage != 0) {
+                    AppData.user.decreaseRank(AppData.getUser(opponentUserName).getRank());
+                    AppData.uploadUserNewRank(this);
+                }
+                if (target.equals(START_PRIVATE)) {
+                    AppData.uninviteToGame(opponentUserName);
+                }
+                dialog.cancel();
+                cancelActivity();
+            });
+            builder.setNegativeButton("No, cancel", (DialogInterface.OnClickListener) (dialog, which) -> {
+                // If user click no then dialog box is canceled.
+                dialog.cancel();
+            });
+            // Create the Alert dialog
+            AlertDialog alertDialog = builder.create();
+            // Show the Alert Dialog box
+            alertDialog.show();
+        }
+        else cancelActivity();
     }
 
     //canceling activity, quitting game activity and reset all necessary data fields
     public void cancelActivity(){
-        stopTimer();
+        if (waitingForOpponentTimer != null)
+            waitingForOpponentTimer.pauseTimer();
         Intent intent = new Intent();
         intent.putExtra("GAME_CODE", gameCode);
         setResult(RESULT_CANCELED, intent);

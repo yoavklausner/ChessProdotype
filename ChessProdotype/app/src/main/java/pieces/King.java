@@ -3,6 +3,10 @@ package pieces;
 import com.example.chessprodotype.Coordinate;
 
 public class King extends FirstMoveSpecialPiece {
+    /*
+    extends first move special piece class - represent king chess piece
+     */
+
     public static final char WHITE_SIGN = '♔';
     public static final char BLACK_SIGN = '♚';
     public King(King king) {super(king);}

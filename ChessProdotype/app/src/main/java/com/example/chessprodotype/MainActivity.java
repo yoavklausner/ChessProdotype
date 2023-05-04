@@ -9,6 +9,9 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -20,6 +23,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -30,6 +36,12 @@ import java.util.Random;
 import pieces.Piece;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    /*
+    the main screen in the app. home page.
+    responsible for all the general things and for the menu and app functional options.
+     */
+
 
     Intent intent;
     Button btnStartPhysicalGame;
@@ -71,6 +83,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnStartPhysicalGame.setOnClickListener(this);
         btnFindMatch.setOnClickListener(this);
         btnStartPrivate.setOnClickListener(this);
+        Glide.with(this).load(this.getResources().getDrawable(R.drawable.default_user_image))
+                .apply(RequestOptions.bitmapTransform(new CircleCrop())).into(ivUserMainImage);
         sp = getSharedPreferences(AppData.SP_NAME, MODE_PRIVATE);
         intent = new Intent(this, LoadingScreenActivity.class);
         intent.putExtra("TARGET", 0);
@@ -117,7 +131,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editor.commit();
         enableOnlineFeatures(false);
         AppData.user = null;
-        ivUserMainImage.setImageDrawable(this.getResources().getDrawable(R.drawable.default_user_image));
+        Glide.with(this).load(this.getResources().getDrawable(R.drawable.default_user_image))
+                .apply(RequestOptions.bitmapTransform(new CircleCrop())).into(ivUserMainImage);
+        //ivUserMainImage.setImageDrawable(this.getResources().getDrawable(R.drawable.default_user_image));
         tvHelloMsg.setText("hello,\n to unlock online features please login");
         stopService(new Intent(this, UserMessagesService.class));
         if (tvUsersNotificationAlert != null) tvUsersNotificationAlert.setVisibility(View.INVISIBLE);
@@ -230,6 +246,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void createLoginDialog(){
         d = new Dialog(this);
         d.setContentView(R.layout.login_dialog);
+        d.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         d.setTitle("login");
         etLoginUserName = d.findViewById(R.id.etLoginUserName);
         etLoginPassword = d.findViewById(R.id.etLoginPassword);
@@ -241,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         if (view == btnStartPhysicalGame) {
-            intent = new Intent(this, PhysicalGameActivity.class);
+            intent = new Intent(this, OfflineGameActivity.class);
             startActivity(intent);
         }
         if (view == btnFindMatch){
@@ -319,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void setGameParams(){
         myColor = randomGameCoLor();
         gameCode = AppData.user.getUserName();
-        target = VirtualGameActivity.START_PRIVATE;
+        target = OnlineGameActivity.START_PRIVATE;
     }
 
     //starting private match, showing dialog for selecting game to join if there are or to create new session
@@ -342,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     myColor = Piece.Color.WHITE;
                     if (AppData.gameInvites.get(invites[which]) == Piece.Color.WHITE) myColor = Piece.Color.BLACK;
                     gameCode = invites[which];
-                    target = VirtualGameActivity.JOINING_PRIVATE;
+                    target = OnlineGameActivity.JOINING_PRIVATE;
                     dialog.dismiss();
                     goToVirtualGameActivity();
                 }
@@ -380,6 +397,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void createProfileDialog(){
         userDialog = new Dialog(this);
         userDialog.setContentView(R.layout.user_profile_dialog);
+        userDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         userDialog.setTitle(AppData.user.getUserName());
         ivProfileImage = userDialog.findViewById(R.id.ivProfileImage);
         tvFirstName = userDialog.findViewById(R.id.tvFirstName);
@@ -430,10 +448,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //after sending intent resetting this activity attributes which contain virtual game params
     private void goToVirtualGameActivity(){
         if (myColor != null && gameCode != null && target != null) {
-            Intent intent = new Intent(this, VirtualGameActivity.class);
-            intent.putExtra(VirtualGameActivity.COLOR, myColor);
-            intent.putExtra(VirtualGameActivity.GAME_CODE, gameCode);
-            intent.putExtra(VirtualGameActivity.TARGET, target);
+            Intent intent = new Intent(this, OnlineGameActivity.class);
+            intent.putExtra(OnlineGameActivity.COLOR, myColor);
+            intent.putExtra(OnlineGameActivity.GAME_CODE, gameCode);
+            intent.putExtra(OnlineGameActivity.TARGET, target);
             myColor = null;
             gameCode = null;
             target = null;
@@ -455,7 +473,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (opponentColor == Piece.Color.WHITE) myColor = Piece.Color.BLACK;
                     else myColor = Piece.Color.WHITE;
                     gameCode = closestOpponentUname;
-                    target = VirtualGameActivity.JOINING;
+                    target = OnlineGameActivity.JOINING;
                     goToVirtualGameActivity();
                 }
 
@@ -468,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else{
             myColor = randomGameCoLor();
             gameCode = AppData.user.getUserName();
-            target = VirtualGameActivity.WAITING;
+            target = OnlineGameActivity.WAITING;
             goToVirtualGameActivity();
         }
 

@@ -6,6 +6,13 @@ import com.example.chessprodotype.Coordinate;
 import java.util.ArrayList;
 
 public abstract class Piece {
+
+    /*
+    class representing chess piece, contains color (color enum type), value and piece character
+    this class abstract - cannot generate objects
+     */
+
+
     public enum Color{
         WHITE, BLACK
     }

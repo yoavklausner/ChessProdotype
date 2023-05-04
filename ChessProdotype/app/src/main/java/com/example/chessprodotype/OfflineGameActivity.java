@@ -11,8 +11,13 @@ import android.widget.Toast;
 
 import pieces.Piece;
 
-public class PhysicalGameActivity extends GameActivity implements View.OnClickListener {
+public class OfflineGameActivity extends GameActivity implements View.OnClickListener {
 
+
+    /*
+    a game activity but not online.
+    a game activity for 1on1 on the same screen.
+     */
 
     //players turns info displays
     TextView tvWhiteLastMoveDisplay, tvBlackLastMoveDisplay;

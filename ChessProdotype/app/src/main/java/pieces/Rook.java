@@ -3,6 +3,11 @@ package pieces;
 import com.example.chessprodotype.Coordinate;
 
 public class Rook extends FirstMoveSpecialPiece {
+
+    /*
+    extends first move special piece class class - represent rook chess piece
+     */
+
     public static final char WHITE_SIGN = '♖';
     public static final char BLACK_SIGN = '♜';
 

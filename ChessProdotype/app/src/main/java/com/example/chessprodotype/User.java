@@ -5,11 +5,18 @@ import android.net.Uri;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
 public class User {
+
+    /*
+    generates user objects containing all the app user data.
+     */
+
 
     public final static int START_RANK = 750;
     private String userName;
@@ -124,7 +131,7 @@ public class User {
         Uri userImageUri;
         if (this.imageUri != null) {
             userImageUri = Uri.parse(this.imageUri);
-            Glide.with(context).load(userImageUri).into(imageView);
+            Glide.with(context).load(userImageUri).apply(RequestOptions.bitmapTransform(new CircleCrop())).into(imageView);
         }
     }
 
