@@ -44,16 +44,16 @@
             android:name=".SignUpActivity"
             android:exported="false" />
         <activity
-            android:name=".VirtualGameActivity"
+            android:name=".OnlineGameActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"/>
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar."/>
         <activity
-            android:name=".PhysicalGameActivity"
+            android:name=".OfflineGameActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar." />
 
         <activity
             android:name=".MainActivity"

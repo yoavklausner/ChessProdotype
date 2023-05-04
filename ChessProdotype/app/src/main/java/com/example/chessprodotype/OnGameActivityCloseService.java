@@ -6,6 +6,12 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 
 public class OnGameActivityCloseService extends Service {
+
+    /*
+    a service class which responsible for catch when the app closes while the virtual game activity is running
+    and responsible to update to firebase the it has closed.
+     */
+
     String gameCode;
 
     public OnGameActivityCloseService() {
@@ -14,9 +20,9 @@ public class OnGameActivityCloseService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
-        if (VirtualGameActivity.isGameRunning){
+        if (OnlineGameActivity.isGameRunning){
             AppData.removeGameFields(gameCode);
-            VirtualGameActivity.isGameRunning = false;
+            OnlineGameActivity.isGameRunning = false;
             stopSelf();
         }
     }

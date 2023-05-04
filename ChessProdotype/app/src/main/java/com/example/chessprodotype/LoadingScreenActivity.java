@@ -28,6 +28,11 @@ import java.util.UUID;
 
 public class LoadingScreenActivity extends AppCompatActivity {
 
+    /*
+    responsible for loading screen in the start of the app and also for
+    the loading screen when signing and uploading image to storage.
+     */
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

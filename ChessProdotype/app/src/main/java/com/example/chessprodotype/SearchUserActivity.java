@@ -6,7 +6,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -28,6 +30,12 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class SearchUserActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
+
+    /*
+    a search users activity. contains a auto complete edit text for searching users
+    and sending them a friend request and watch their profile.
+     */
+
 
     AutoCompleteTextView etSearchUser;
     Button btnSearch;
@@ -136,29 +144,30 @@ public class SearchUserActivity extends AppCompatActivity implements View.OnClic
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-            userDialog = new Dialog(this);
-            userDialog.setContentView(R.layout.user_profile_dialog);
+        userDialog = new Dialog(this);
+        userDialog.setContentView(R.layout.user_profile_dialog);
+        userDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         selected = AppData.getUser(searchedUsers.get(i));
-            userDialog.setTitle(selected.getUserName());
-            ivProfileImage = userDialog.findViewById(R.id.ivProfileImage);
-            tvFirstName = userDialog.findViewById(R.id.tvFirstName);
-            tvLastName = userDialog.findViewById(R.id.tvLastName);
-            tvUserRank = userDialog.findViewById(R.id.tvUserRank);
-            btnAddFriend = userDialog.findViewById(R.id.btnAddFriend);
-            btnAddFriend.setOnClickListener(this);
-            selected.putMyImageIntoFrame(this, ivProfileImage);
-            tvFirstName.setText("first name:\n " + selected.getFirstName());
-            tvLastName.setText("last name:\n " + selected.getLastName());
-            tvUserRank.setText("rank: " + selected.getRank());
-            if (AppData.user.getFriendsUserNames().contains(selected.getUserName())
-            || AppData.friendRequests.containsKey(selected.getUserName())) {
-                btnAddFriend.setEnabled(false);
-                btnAddFriend.setVisibility(View.INVISIBLE);
-            }
-            else{
-                btnAddFriend.setEnabled(true);
-                btnAddFriend.setVisibility(View.VISIBLE);
-            }
-            userDialog.show();
+        userDialog.setTitle(selected.getUserName());
+        ivProfileImage = userDialog.findViewById(R.id.ivProfileImage);
+        tvFirstName = userDialog.findViewById(R.id.tvFirstName);
+        tvLastName = userDialog.findViewById(R.id.tvLastName);
+        tvUserRank = userDialog.findViewById(R.id.tvUserRank);
+        btnAddFriend = userDialog.findViewById(R.id.btnAddFriend);
+        btnAddFriend.setOnClickListener(this);
+        selected.putMyImageIntoFrame(this, ivProfileImage);
+        tvFirstName.setText("first name:\n " + selected.getFirstName());
+        tvLastName.setText("last name:\n " + selected.getLastName());
+        tvUserRank.setText("rank: " + selected.getRank());
+        if (AppData.user.getFriendsUserNames().contains(selected.getUserName())
+        || AppData.friendRequests.containsKey(selected.getUserName())) {
+            btnAddFriend.setEnabled(false);
+            btnAddFriend.setVisibility(View.INVISIBLE);
+        }
+        else{
+            btnAddFriend.setEnabled(true);
+            btnAddFriend.setVisibility(View.VISIBLE);
+        }
+        userDialog.show();
     }
 }

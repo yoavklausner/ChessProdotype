@@ -1,6 +1,8 @@
 package com.example.chessprodotype;
 
 import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +20,11 @@ import pieces.Queen;
 import pieces.Rook;
 
 public abstract class GameActivity extends AppCompatActivity implements ChessGameView, View.OnClickListener {
+
+    /*
+    an activity class. responsible for connecting between visiblity functionality to
+    operational functionality in the game activity.
+     */
 
 
     protected DisplayMetrics displayMetrics;
@@ -110,6 +117,7 @@ public abstract class GameActivity extends AppCompatActivity implements ChessGam
     public void createEndGameDialog(String endGameMsg) {
         dialog = new Dialog(this);
         dialog.setContentView(R.layout.chackmate_dialog);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setTitle("end game");
         tvEndGameMessage = dialog.findViewById(R.id.tvWinner);
         btnRestartMatch = dialog.findViewById(R.id.btnRestartMatch);
@@ -133,6 +141,7 @@ public abstract class GameActivity extends AppCompatActivity implements ChessGam
         }
         dialog = new Dialog(this);
         dialog.setContentView(R.layout.pawn_promotion_dialog);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setTitle("pawn promotion");
         dialog.setCancelable(false);
         btnKnight = dialog.findViewById(R.id.btnKnight);

@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:background="@drawable/dialog_background">
 
     <TextView
         android:layout_width="wrap_content"
@@ -19,10 +20,11 @@
         android:id="@+id/btnRestartMatch"/>
 
     <Button
+        android:id="@+id/btnGoToMenu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingHorizontal="40dp"
         android:text="go to menu"
-        android:textSize="20dp"
-        android:id="@+id/btnGoToMenu"/>
+        android:textSize="20dp" />
 
 </LinearLayout>
