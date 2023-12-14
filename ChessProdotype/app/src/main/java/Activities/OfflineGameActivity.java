@@ -1,4 +1,4 @@
-package com.example.chessprodotype;
+package Activities;
 
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -9,6 +9,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.chessprodotype.ChessBoard;
+import com.example.chessprodotype.ChessTimer;
+import com.example.chessprodotype.Game;
+import com.example.chessprodotype.R;
+
+import Activities.GameActivity;
 import pieces.Piece;
 
 public class OfflineGameActivity extends GameActivity implements View.OnClickListener {

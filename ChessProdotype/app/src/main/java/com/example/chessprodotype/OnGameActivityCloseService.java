@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
+import Activities.OnlineGameActivity;
+
 public class OnGameActivityCloseService extends Service {
 
     /*

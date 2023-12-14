@@ -250,7 +250,7 @@ public class Game {
     }
 
     //returns a grid of the game's board pieces in the matching coordinates
-    protected Piece[][] getBoard(){
+    public Piece[][] getBoard(){
         Piece[][] board = new Piece[ChessBoard.SIZE][ChessBoard.SIZE];
         placePiecesOnBoard(board, Piece.Color.WHITE);
         placePiecesOnBoard(board, Piece.Color.BLACK);
@@ -272,7 +272,7 @@ public class Game {
     }
 
     //gets coordinate object and returns piece in this coordinate
-    protected Piece getPieceInCoordinate(Coordinate coordinate){ // using the assumption which in each coordinate there can be only one piece
+    public Piece getPieceInCoordinate(Coordinate coordinate){ // using the assumption which in each coordinate there can be only one piece
         if (coordinate != null) {
             String coordinateStr = coordinate.toString();
             if (this.whitePieces.containsKey(coordinateStr))

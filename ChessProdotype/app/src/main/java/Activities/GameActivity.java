@@ -1,4 +1,4 @@
-package com.example.chessprodotype;
+package Activities;
 
 import android.app.Dialog;
 import android.graphics.Color;
@@ -13,11 +13,18 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.chessprodotype.ChessBoard;
+import com.example.chessprodotype.ChessGameView;
+import com.example.chessprodotype.Coordinate;
+import com.example.chessprodotype.Game;
+import com.example.chessprodotype.R;
+
 import pieces.Bishop;
 import pieces.Knight;
 import pieces.Piece;
 import pieces.Queen;
 import pieces.Rook;
+import com.example.chessprodotype.ChessGameView;
 
 public abstract class GameActivity extends AppCompatActivity implements ChessGameView, View.OnClickListener {
 

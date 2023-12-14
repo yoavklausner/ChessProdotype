@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import Activities.OfflineGameActivity;
 import pieces.Piece;
 
 public class ChessBoard {

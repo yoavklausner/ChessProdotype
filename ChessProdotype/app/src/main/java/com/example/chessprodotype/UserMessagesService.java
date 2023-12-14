@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import Activities.MainActivity;
+import Activities.OnlineGameActivity;
 import pieces.Piece;
 
 public class UserMessagesService extends Service {

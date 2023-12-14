@@ -1,7 +1,8 @@
 package com.example.chessprodotype;
 
-import android.os.CountDownTimer;
 import android.widget.TextView;
+
+import Activities.GameActivity;
 
 public class ChessTimer extends Timer{
 

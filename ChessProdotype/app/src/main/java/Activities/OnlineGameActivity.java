@@ -1,4 +1,4 @@
-package com.example.chessprodotype;
+package Activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -15,6 +15,15 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.chessprodotype.AppData;
+import com.example.chessprodotype.ChessBoard;
+import com.example.chessprodotype.ChessGameView;
+import com.example.chessprodotype.Game;
+import com.example.chessprodotype.GameSerializer;
+import com.example.chessprodotype.OnGameActivityCloseService;
+import com.example.chessprodotype.R;
+import com.example.chessprodotype.Timer;
+import com.example.chessprodotype.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;

@@ -17,7 +17,7 @@ public class Timer {
 
     TextView tvTimer;
     CountDownTimer timer;
-    AppCompatActivity activity;
+    public AppCompatActivity activity;
 
     private long millisLeft;
 

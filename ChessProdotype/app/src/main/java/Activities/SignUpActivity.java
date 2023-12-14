@@ -1,4 +1,4 @@
-package com.example.chessprodotype;
+package Activities;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +17,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.example.chessprodotype.AppData;
+import com.example.chessprodotype.R;
+import com.example.chessprodotype.User;
 
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;

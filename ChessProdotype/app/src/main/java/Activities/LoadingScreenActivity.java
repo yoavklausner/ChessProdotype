@@ -1,4 +1,4 @@
-package com.example.chessprodotype;
+package Activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +12,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.example.chessprodotype.AppData;
+import com.example.chessprodotype.R;
+import com.example.chessprodotype.User;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
